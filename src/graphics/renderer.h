@@ -15,6 +15,7 @@ class Framebuffers;
 class CommandPool;
 class SyncObjects;
 class Pipeline;
+class Mesh;
 
 class Renderer {
 public:
@@ -38,6 +39,9 @@ private:
     CommandPool* commandPool;
     SyncObjects* syncObjects;
     Pipeline* pipeline;
+    
+    // Mesh for rendering
+    Mesh* testMesh;
     
     // Rendering state
     size_t currentFrame;

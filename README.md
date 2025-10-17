@@ -9,10 +9,11 @@ This project is an efficient block-based voxel game that utilizes cubic chunks a
 - ✅ Render pass and framebuffers
 - ✅ Command pool and command buffers
 - ✅ Synchronization objects (semaphores and fences)
-- ✅ Graphics pipeline with shader loading support
-- ✅ Basic render loop with clear operation
+- ✅ Graphics pipeline with vertex input configuration
+- ✅ Basic render loop with mesh rendering
 - ✅ Mesh generation system for voxel chunks
 - ✅ Vertex and index buffer creation
+- ✅ **Mesh rendering integrated with Vulkan pipeline**
 - macOS (MoltenVK) portability enumeration and subset extension handling are in place.
 
 ## Features
@@ -43,13 +44,16 @@ cd voxel-game
 - Install GLFW (package manager or build from source with Vulkan enabled).
 - macOS: ensure MoltenVK is installed and available via the Vulkan SDK.
 
-### 3. Build the Project
-Navigate to the project directory and compile the shaders first:
+### 3. Compile Shaders
+**Important:** You must compile shaders before running the application. See [SHADER_COMPILATION.md](SHADER_COMPILATION.md) for detailed instructions.
+
+Quick start:
 ```
 ./compile_shaders.sh
 ```
 
-Then create a build directory and compile the project:
+### 4. Build the Project
+Create a build directory and compile the project:
 ```
 mkdir build
 cd build
@@ -57,19 +61,26 @@ cmake ..
 cmake --build .
 ```
 
-### 4. Run the Application
+### 5. Run the Application
 After building the project, you can run the application:
 ```
-./voxel-game
+./VoxelGame
 ```
 
-### 5. Modify and Extend
+The application will:
+1. Initialize Vulkan and create a rendering context
+2. Generate a test voxel chunk (16x16x16 voxels)
+3. Create mesh geometry using face culling optimization
+4. Upload vertex and index buffers to GPU
+5. Render the mesh with simple directional lighting
+
+### 6. Modify and Extend
 You can modify the game by editing the following files:
 - **src/world/chunk.cpp** and **src/world/chunk.h**: Modify chunk behavior.
 - **src/world/voxel.cpp** and **src/world/voxel.h**: Change voxel properties.
 - **src/graphics/renderer.cpp** and **src/graphics/renderer.h**: Adjust rendering logic.
 
-### 6. Add Assets
+### 7. Add Assets
 To add new textures or shaders, place them in the `assets/textures` or `assets/shaders` directories, respectively. Update the rendering code to utilize these assets.
 
 ### Platform Notes
@@ -97,12 +108,12 @@ To add new textures or shaders, place them in the `assets/textures` or `assets/s
 - ✅ Graphics pipeline and shader integration
 - ✅ Basic clear/draw render loop
 - ✅ Voxel mesh generation system
-- 🔄 Integrate mesh rendering with graphics pipeline
+- ✅ **Integrate mesh rendering with graphics pipeline**
 - 🔄 Camera system and MVP matrices
 - 🔄 Chunk manager integration with rendering
 - 🔄 Texture atlas support
 
-### 7. Contribute
+### 8. Contribute
 If you would like to contribute to the project, please fork the repository and submit a pull request with your changes.
 
 ## License

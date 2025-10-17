@@ -9,13 +9,16 @@
 #include "vulkan/command_pool.h"
 #include "vulkan/sync_objects.h"
 #include "vulkan/pipeline.h"
+#include "mesh.h"
+#include "world/chunk.h"
+#include "world/mesh_generator.h"
 #include <iostream>
 #include <stdexcept>
 
 Renderer::Renderer()
     : window(nullptr), vulkanInstance(nullptr), device(nullptr), swapchain(nullptr),
       imageViews(nullptr), renderPass(nullptr), framebuffers(nullptr),
-      commandPool(nullptr), syncObjects(nullptr), pipeline(nullptr),
+      commandPool(nullptr), syncObjects(nullptr), pipeline(nullptr), testMesh(nullptr),
       currentFrame(0) {
 }
 
@@ -63,12 +66,26 @@ void Renderer::init(Window* window) {
     syncObjects = new SyncObjects(device->getDevice());
     syncObjects->createSyncObjects(MAX_FRAMES_IN_FLIGHT);
     
-    // Create graphics pipeline (Note: this would fail without compiled shaders)
-    // Commenting out for now to allow the program to run
-    // pipeline = new Pipeline(device->getDevice(), renderPass->getRenderPass(), swapchain->getSwapchainExtent());
-    // pipeline->createPipeline("assets/shaders/shader.vert.spv", "assets/shaders/shader.frag.spv");
+    // Create graphics pipeline with vertex input configuration
+    pipeline = new Pipeline(device->getDevice(), renderPass->getRenderPass(), swapchain->getSwapchainExtent());
+    pipeline->createPipeline("assets/shaders/shader.vert.spv", "assets/shaders/shader.frag.spv");
+    
+    // Generate test mesh from a chunk
+    Chunk testChunk(0, 0, 0);
+    testChunk.load();
+    
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices;
+    MeshGenerator::generateChunkMesh(testChunk, vertices, indices);
+    
+    // Create mesh and upload to GPU
+    testMesh = new Mesh(device->getDevice(), device->getPhysicalDevice());
+    testMesh->createVertexBuffer(vertices);
+    testMesh->createIndexBuffer(indices);
     
     std::cout << "Vulkan renderer initialized successfully!" << std::endl;
+    std::cout << "Generated mesh with " << vertices.size() << " vertices and " 
+              << indices.size() << " indices" << std::endl;
 }
 
 void Renderer::render() {
@@ -167,8 +184,19 @@ void Renderer::recordCommandBuffer(size_t imageIndex) {
     
     vkCmdBeginRenderPass(commandBuffers[currentFrame], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     
-    // Draw commands would go here
-    // For now, just clear the screen
+    // Bind the graphics pipeline
+    vkCmdBindPipeline(commandBuffers[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getPipeline());
+    
+    // Bind vertex buffer
+    VkBuffer vertexBuffers[] = {testMesh->getVertexBuffer()};
+    VkDeviceSize offsets[] = {0};
+    vkCmdBindVertexBuffers(commandBuffers[currentFrame], 0, 1, vertexBuffers, offsets);
+    
+    // Bind index buffer
+    vkCmdBindIndexBuffer(commandBuffers[currentFrame], testMesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
+    
+    // Draw the mesh
+    vkCmdDrawIndexed(commandBuffers[currentFrame], testMesh->getIndexCount(), 1, 0, 0, 0);
     
     vkCmdEndRenderPass(commandBuffers[currentFrame]);
     
@@ -180,6 +208,12 @@ void Renderer::recordCommandBuffer(size_t imageIndex) {
 void Renderer::cleanup() {
     if (device && device->getDevice() != VK_NULL_HANDLE) {
         vkDeviceWaitIdle(device->getDevice());
+    }
+    
+    if (testMesh) {
+        testMesh->cleanup();
+        delete testMesh;
+        testMesh = nullptr;
     }
     
     if (pipeline) {
