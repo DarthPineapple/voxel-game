@@ -89,30 +89,32 @@ void Camera::getViewMatrix(float* matrix) const {
     float upZ = -cosYaw * sinPitch;
     
     // Create view matrix (inverse of camera transform)
-    // Row-major order for Vulkan
+    // Column-major order for Vulkan/GLSL
+    // Note: forward vector is negated because camera looks down -Z axis
     matrix[0] = rightX;
-    matrix[1] = upX;
-    matrix[2] = forwardX;
+    matrix[1] = rightY;
+    matrix[2] = rightZ;
     matrix[3] = 0.0f;
     
-    matrix[4] = rightY;
+    matrix[4] = upX;
     matrix[5] = upY;
-    matrix[6] = forwardY;
+    matrix[6] = upZ;
     matrix[7] = 0.0f;
     
-    matrix[8] = rightZ;
-    matrix[9] = upZ;
-    matrix[10] = forwardZ;
+    matrix[8] = -forwardX;
+    matrix[9] = -forwardY;
+    matrix[10] = -forwardZ;
     matrix[11] = 0.0f;
     
     matrix[12] = -(rightX * posX + rightY * posY + rightZ * posZ);
     matrix[13] = -(upX * posX + upY * posY + upZ * posZ);
-    matrix[14] = -(forwardX * posX + forwardY * posY + forwardZ * posZ);
+    matrix[14] = (forwardX * posX + forwardY * posY + forwardZ * posZ);
     matrix[15] = 1.0f;
 }
 
 void Camera::getProjectionMatrix(float* matrix, float aspectRatio) const {
     // Perspective projection matrix for Vulkan (right-handed, Y-down, Z in [0, 1])
+    // Column-major order for Vulkan/GLSL
     float fovRad = fov * M_PI / 180.0f;
     float tanHalfFov = std::tan(fovRad / 2.0f);
     
@@ -137,12 +139,12 @@ void Camera::getMVPMatrix(float* mvp, float aspectRatio) const {
 }
 
 void Camera::multiplyMatrices(const float* a, const float* b, float* result) const {
-    // Matrix multiplication: result = a * b (4x4 matrices)
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            result[i * 4 + j] = 0.0f;
+    // Matrix multiplication: result = a * b (4x4 matrices in column-major order)
+    for (int col = 0; col < 4; col++) {
+        for (int row = 0; row < 4; row++) {
+            result[col * 4 + row] = 0.0f;
             for (int k = 0; k < 4; k++) {
-                result[i * 4 + j] += a[i * 4 + k] * b[k * 4 + j];
+                result[col * 4 + row] += a[k * 4 + row] * b[col * 4 + k];
             }
         }
     }
