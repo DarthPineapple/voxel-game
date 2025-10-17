@@ -147,3 +147,7 @@ void Camera::multiplyMatrices(const float* a, const float* b, float* result) con
         }
     }
 }
+
+float Camera::getPosX() const { return posX; }
+float Camera::getPosY() const { return posY; }
+float Camera::getPosZ() const { return posZ; }

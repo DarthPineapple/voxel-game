@@ -28,6 +28,11 @@ public:
     float getPositionX() const { return posX; }
     float getPositionY() const { return posY; }
     float getPositionZ() const { return posZ; }
+    float getPosX() const;
+    float getPosY() const;
+    float getPosZ() const;
+    float getYaw() const { return yaw; }
+    float getPitch() const { return pitch; }
 
 private:
     // Camera position
