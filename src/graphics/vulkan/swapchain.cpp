@@ -50,11 +50,11 @@ void Swapchain::createSwapchain(Window* window) {
         vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &qCount, nullptr);
         std::vector<VkQueueFamilyProperties> qProps(qCount);
         vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &qCount, qProps.data());
-        for (uint32_t i = 0; i < qProps.size(); ++i) {
-            if (qProps[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) graphicsFamily = i;
+        for (size_t i = 0; i < qProps.size(); ++i) {
+            if (qProps[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) graphicsFamily = static_cast<int>(i);
             VkBool32 presentSupport = VK_FALSE;
-            vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &presentSupport);
-            if (presentSupport) presentFamily = i;
+            vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, static_cast<uint32_t>(i), surface, &presentSupport);
+            if (presentSupport) presentFamily = static_cast<int>(i);
             if (graphicsFamily >= 0 && presentFamily >= 0) break;
         }
     }

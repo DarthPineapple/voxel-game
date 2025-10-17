@@ -52,7 +52,7 @@ void VulkanInstance::createInstance() {
 }
 
 void VulkanInstance::createSurface(Window* window) {
-    if (glfwCreateWindowSurface(instance, window->getGLFWWindow(), nullptr, &surface) != VK_SUCCESS) {
+    if (glfwCreateWindowSurface(instance, window->getGLFWwindow(), nullptr, &surface) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create window surface!");
     }
 }
