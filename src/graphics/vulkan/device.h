@@ -1,3 +1,8 @@
+#ifndef DEVICE_H
+#define DEVICE_H
+
+#include <vulkan/vulkan.h>
+
 class Device {
 public:
     Device();
@@ -15,3 +20,5 @@ private:
     void pickPhysicalDevice(VkInstance instance);
     void createLogicalDevice();
 };
+
+#endif // DEVICE_H

@@ -1,9 +1,13 @@
 #include "chunk.h"
 #include <vector>
 
-Chunk::Chunk(int x, int y, int z) : position(x, y, z), isLoaded(false) {
+Chunk::Chunk(int x, int y, int z) : posX(x), posY(y), posZ(z), isLoaded(false) {
     // Initialize voxel data
     voxels.resize(CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE);
+}
+
+Chunk::~Chunk() {
+    unload();
 }
 
 void Chunk::load() {
@@ -28,15 +32,17 @@ void Chunk::update() {
     }
 }
 
+const std::vector<Voxel>& Chunk::getVoxels() const {
+    return voxels;
+}
+
 void Chunk::generateVoxels() {
     for (int x = 0; x < CHUNK_SIZE; ++x) {
         for (int y = 0; y < CHUNK_SIZE; ++y) {
             for (int z = 0; z < CHUNK_SIZE; ++z) {
                 // Example voxel generation logic
-                Voxel voxel;
-                voxel.setPosition(x, y, z);
-                voxel.setType(VoxelType::GRASS); // Set default type
-                voxels[x + y * CHUNK_SIZE + z * CHUNK_SIZE * CHUNK_SIZE] = voxel;
+                int index = x + y * CHUNK_SIZE + z * CHUNK_SIZE * CHUNK_SIZE;
+                voxels[index] = Voxel(x, y, z, 1); // Set default type
             }
         }
     }

@@ -1,16 +1,28 @@
+#ifndef WINDOW_H
+#define WINDOW_H
+
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+
 class Window {
 public:
     Window();
     ~Window();
 
-    bool create(int width, int height, const char* title);
+    bool create(const char* title, int width, int height);
     void destroy();
     void processEvents();
+    bool shouldClose() const;
 
-    bool isOpen() const;
+    GLFWwindow* getGLFWwindow() const;
+    int getWidth() const { return width; }
+    int getHeight() const { return height; }
 
 private:
-    // Platform-specific window handle
-    void* windowHandle;
-    bool open;
+    GLFWwindow* window;
+    int width;
+    int height;
+    const char* title;
 };
+
+#endif // WINDOW_H

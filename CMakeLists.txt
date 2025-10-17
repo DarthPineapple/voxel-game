@@ -22,8 +22,11 @@ file(GLOB_RECURSE SOURCES
 # Vulkan library
 find_package(Vulkan REQUIRED)
 
+# GLFW library
+find_package(glfw3 REQUIRED)
+
 # Add executable
 add_executable(VoxelGame ${SOURCES})
 
-# Link Vulkan
-target_link_libraries(VoxelGame Vulkan::Vulkan)
+# Link libraries
+target_link_libraries(VoxelGame Vulkan::Vulkan glfw)

@@ -9,12 +9,14 @@ public:
     ChunkManager();
     ~ChunkManager();
 
-    void addChunk(const Chunk& chunk);
-    void removeChunk(int chunkId);
-    void updateChunks();
+    void init();
+    void addChunk(int x, int y, int z);
+    void removeChunk(int x, int y, int z);
+    void update();
+    void cleanup();
 
 private:
-    std::vector<Chunk> chunks;
+    std::vector<Chunk*> chunks;
 };
 
 #endif // CHUNK_MANAGER_H

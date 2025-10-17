@@ -1,39 +1,36 @@
 #include "application.h"
 #include "window.h"
-#include "renderer.h"
-#include "chunk_manager.h"
+#include "graphics/renderer.h"
+#include "world/chunk_manager.h"
 
 #include <iostream>
 
-Application::Application() : window(nullptr), renderer(nullptr), chunkManager(nullptr) {}
+Application::Application() : window(nullptr), renderer(nullptr), chunkManager(nullptr), isRunning(false) {}
 
 Application::~Application() {
     cleanup();
 }
 
-bool Application::init() {
+void Application::init() {
     window = new Window();
     if (!window->create("Voxel Game", 800, 600)) {
         std::cerr << "Failed to create window!" << std::endl;
-        return false;
+        throw std::runtime_error("Failed to create window");
     }
 
     renderer = new Renderer();
-    if (!renderer->init(window)) {
-        std::cerr << "Failed to initialize renderer!" << std::endl;
-        return false;
-    }
+    renderer->init(window);
 
     chunkManager = new ChunkManager();
     chunkManager->init();
 
-    return true;
+    isRunning = true;
 }
 
 void Application::run() {
-    while (!window->shouldClose()) {
+    while (!window->shouldClose() && isRunning) {
         window->processEvents();
-        chunkManager->updateChunks();
+        chunkManager->update();
         renderer->render();
     }
 }
@@ -42,13 +39,16 @@ void Application::cleanup() {
     if (chunkManager) {
         chunkManager->cleanup();
         delete chunkManager;
+        chunkManager = nullptr;
     }
     if (renderer) {
         renderer->cleanup();
         delete renderer;
+        renderer = nullptr;
     }
     if (window) {
         window->destroy();
         delete window;
+        window = nullptr;
     }
 }
