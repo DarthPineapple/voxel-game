@@ -1,6 +1,9 @@
 #include "pipeline.h"
 #include <stdexcept>
 #include <fstream>
+#include <filesystem>
+#include <cstdlib>
+#include <sstream>
 
 Pipeline::Pipeline(VkDevice device, VkRenderPass renderPass, VkExtent2D extent)
     : device(device), renderPass(renderPass), extent(extent), 
@@ -162,20 +165,49 @@ void Pipeline::cleanup() {
 }
 
 std::vector<char> Pipeline::readFile(const std::string& filename) {
-    std::ifstream file(filename, std::ios::ate | std::ios::binary);
+    namespace fs = std::filesystem;
+    fs::path p(filename);
+    std::vector<fs::path> candidates;
 
-    if (!file.is_open()) {
-        throw std::runtime_error("Failed to open file: " + filename);
+    if (p.is_absolute()) {
+        candidates.push_back(p);
+    } else {
+        // 1) As provided (relative)
+        candidates.push_back(p);
+
+        // 2) Under VOXEL_GAME_ROOT if set
+        if (const char* root = std::getenv("VOXEL_GAME_ROOT")) {
+            candidates.push_back(fs::path(root) / p);
+        }
+
+        // 3) Current working directory and parents
+        fs::path dir = fs::current_path();
+        for (int i = 0; i < 8 && !dir.empty(); ++i) {
+            candidates.push_back(dir / p);
+            dir = dir.parent_path();
+        }
     }
 
-    size_t fileSize = static_cast<size_t>(file.tellg());
-    std::vector<char> buffer(fileSize);
+    std::vector<std::string> tried;
+    for (const auto& cand : candidates) {
+        tried.push_back(cand.string());
+        std::ifstream file(cand, std::ios::ate | std::ios::binary);
+        if (file.is_open()) {
+            size_t fileSize = static_cast<size_t>(file.tellg());
+            std::vector<char> buffer(fileSize);
+            file.seekg(0);
+            file.read(buffer.data(), fileSize);
+            file.close();
+            return buffer;
+        }
+    }
 
-    file.seekg(0);
-    file.read(buffer.data(), fileSize);
-    file.close();
-
-    return buffer;
+    std::ostringstream oss;
+    oss << "Failed to open file: " << filename << "\nSearched paths:\n";
+    for (const auto& t : tried) {
+        oss << "  " << t << "\n";
+    }
+    throw std::runtime_error(oss.str());
 }
 
 void Pipeline::createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule) {
