@@ -23,7 +23,7 @@ The voxel game now supports camera movement and rotation using keyboard input.
 The camera has the following default parameters (can be modified in `src/engine/camera.cpp`):
 
 - **Default Constructor Position**: (0.0, 0.0, 5.0)
-- **Runtime Initial Position** (set in renderer): (8.0, 8.0, 20.0)
+- **Runtime Initial Position** (set in renderer.cpp): (8.0, 8.0, 20.0)
 - **Move Speed**: 3.0 units/second
 - **Rotation Speed**: 1.5 radians/second
 - **Field of View**: 45 degrees
