@@ -52,8 +52,8 @@ When debug mode is active, each frame displays:
 - Aspect ratio
 - Sample transformed vertices showing:
   - Original position
-  - Transformed position in clip space
-  - Normalized Device Coordinates (NDC)
+  - Clip space position (4D homogeneous coordinates before perspective divide)
+  - Normalized Device Coordinates (NDC) (after perspective divide)
 
 ## Example Output
 
@@ -83,7 +83,7 @@ When debug mode is active, each frame displays:
 [Transform] Sample transformed vertices (first 3):
   Vertex 0: 
     Original: (1, 0, 0)
-    Transformed (clip space): (1.81066, 0, 1.002, 1)
+    Clip space: (1.81066, 0, 1.002, 1)
     NDC: (1.81066, 0, 1.002)
 ======================================
 ```

@@ -532,17 +532,19 @@ void Renderer::logTransformedMeshInfo() const {
             float tz = mvp[2] * x + mvp[6] * y + mvp[10] * z + mvp[14] * w;
             float tw = mvp[3] * x + mvp[7] * y + mvp[11] * z + mvp[15] * w;
             
-            // Perspective divide
-            if (tw != 0.0f) {
-                tx /= tw;
-                ty /= tw;
-                tz /= tw;
-            }
-            
             std::cout << "  Vertex " << i << ": " << std::endl;
             std::cout << "    Original: (" << x << ", " << y << ", " << z << ")" << std::endl;
-            std::cout << "    Transformed (clip space): (" << tx << ", " << ty << ", " << tz << ", " << tw << ")" << std::endl;
-            std::cout << "    NDC: (" << tx << ", " << ty << ", " << tz << ")" << std::endl;
+            std::cout << "    Clip space: (" << tx << ", " << ty << ", " << tz << ", " << tw << ")" << std::endl;
+            
+            // Perspective divide for NDC
+            if (tw != 0.0f) {
+                float ndcX = tx / tw;
+                float ndcY = ty / tw;
+                float ndcZ = tz / tw;
+                std::cout << "    NDC: (" << ndcX << ", " << ndcY << ", " << ndcZ << ")" << std::endl;
+            } else {
+                std::cout << "    NDC: Division by zero (w=0)" << std::endl;
+            }
         }
     }
 }
