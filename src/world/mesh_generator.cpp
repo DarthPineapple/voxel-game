@@ -8,6 +8,7 @@ void MeshGenerator::generateChunkMesh(const Chunk& chunk,
 
     const std::vector<Voxel>& voxels = chunk.getVoxels();
 
+    // Note: Index calculation must match chunk voxel storage order
     for (int x = 0; x < CHUNK_SIZE; x++) {
         for (int y = 0; y < CHUNK_SIZE; y++) {
             for (int z = 0; z < CHUNK_SIZE; z++) {
@@ -50,6 +51,7 @@ bool MeshGenerator::isVoxelSolid(const Chunk& chunk, int x, int y, int z) {
         return false; // Out of bounds, treat as air
     }
     
+    // Index calculation matches chunk voxel storage order
     int index = x + y * CHUNK_SIZE + z * CHUNK_SIZE * CHUNK_SIZE;
     return chunk.getVoxels()[index].getType() != 0;
 }

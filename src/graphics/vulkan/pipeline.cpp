@@ -34,6 +34,9 @@ void Pipeline::createPipeline(const std::string& vertShaderPath, const std::stri
 
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
+    // Vertex input configuration
+    // TODO: Configure vertex bindings and attributes when rendering meshes
+    // Currently set to no input for hardcoded triangle test in shader
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vertexInputInfo.vertexBindingDescriptionCount = 0;

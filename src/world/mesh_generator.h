@@ -5,6 +5,20 @@
 #include "chunk.h"
 #include "graphics/mesh.h"
 
+// Mesh generator for voxel chunks using greedy meshing algorithm
+// 
+// Usage example:
+//   Chunk chunk(0, 0, 0);
+//   chunk.load();  // Generate voxel data
+//   
+//   std::vector<Vertex> vertices;
+//   std::vector<uint32_t> indices;
+//   MeshGenerator::generateChunkMesh(chunk, vertices, indices);
+//   
+//   Mesh* mesh = new Mesh(device, physicalDevice);
+//   mesh->createVertexBuffer(vertices);
+//   mesh->createIndexBuffer(indices);
+
 class MeshGenerator {
 public:
     static void generateChunkMesh(const Chunk& chunk, 

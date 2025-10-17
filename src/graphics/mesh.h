@@ -4,10 +4,16 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 
+// Vertex structure for voxel mesh rendering
+// Memory layout matches shader expectations:
+//   location 0: vec3 position (12 bytes)
+//   location 1: vec3 normal (12 bytes)
+//   location 2: vec2 texCoord (8 bytes)
+// Total size: 32 bytes per vertex
 struct Vertex {
-    float position[3];
-    float normal[3];
-    float texCoord[2];
+    float position[3];  // Vertex position in world space
+    float normal[3];    // Surface normal for lighting
+    float texCoord[2];  // Texture coordinates (UV mapping)
 };
 
 class Mesh {
