@@ -6,9 +6,6 @@
 #include <cstring>
 #include <set>
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
 Renderer::Renderer()
     : window(nullptr), instance(VK_NULL_HANDLE), surface(VK_NULL_HANDLE),
       physicalDevice(VK_NULL_HANDLE), device(VK_NULL_HANDLE),
