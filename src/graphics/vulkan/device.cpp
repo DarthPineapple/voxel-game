@@ -53,14 +53,14 @@ void Device::createLogicalDevice(VkSurfaceKHR surface) {
     int graphicsFamily = -1;
     int presentFamily = -1;
 
-    for (uint32_t i = 0; i < queueFamilies.size(); i++) {
+    for (size_t i = 0; i < queueFamilies.size(); i++) {
         if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-            graphicsFamily = i;
+            graphicsFamily = static_cast<int>(i);
         }
         VkBool32 presentSupport = false;
-        vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &presentSupport);
+        vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, static_cast<uint32_t>(i), surface, &presentSupport);
         if (presentSupport) {
-            presentFamily = i;
+            presentFamily = static_cast<int>(i);
         }
         if (graphicsFamily >= 0 && presentFamily >= 0) {
             break;
