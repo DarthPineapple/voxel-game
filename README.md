@@ -85,6 +85,7 @@ To add new textures or shaders, place them in the `assets/textures` or `assets/s
   - Ensure the window is created, visible, and not minimized; update GPU drivers.
 
 ## Roadmap
+- Fix compilation errors on arm64 macos
 - Image views, render pass, framebuffers
 - Command pool/buffers and synchronization
 - Graphics pipeline and shader integration
