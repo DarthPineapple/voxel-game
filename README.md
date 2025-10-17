@@ -4,8 +4,15 @@
 This project is an efficient block-based voxel game that utilizes cubic chunks and dynamic chunk loading. The graphics are rendered using Vulkan, providing high performance and flexibility.
 
 ## Current Status
-- Vulkan instance, surface, physical device, logical device, and swapchain creation are implemented.
-- Render loop is a placeholder; no command buffers, image views, or rendering pipeline yet.
+- ✅ Vulkan instance, surface, physical device, logical device, and swapchain creation
+- ✅ Image views for swapchain images
+- ✅ Render pass and framebuffers
+- ✅ Command pool and command buffers
+- ✅ Synchronization objects (semaphores and fences)
+- ✅ Graphics pipeline with shader loading support
+- ✅ Basic render loop with clear operation
+- ✅ Mesh generation system for voxel chunks
+- ✅ Vertex and index buffer creation
 - macOS (MoltenVK) portability enumeration and subset extension handling are in place.
 
 ## Features
@@ -37,17 +44,16 @@ cd voxel-game
 - macOS: ensure MoltenVK is installed and available via the Vulkan SDK.
 
 ### 3. Build the Project
-Navigate to the project directory and create a build directory:
+Navigate to the project directory and compile the shaders first:
+```
+./compile_shaders.sh
+```
+
+Then create a build directory and compile the project:
 ```
 mkdir build
 cd build
-```
-Run CMake to configure the project:
-```
 cmake ..
-```
-Compile the project:
-```
 cmake --build .
 ```
 
@@ -85,11 +91,16 @@ To add new textures or shaders, place them in the `assets/textures` or `assets/s
   - Ensure the window is created, visible, and not minimized; update GPU drivers.
 
 ## Roadmap
-- Fix compilation errors on arm64 macos
-- Image views, render pass, framebuffers
-- Command pool/buffers and synchronization
-- Graphics pipeline and shader integration
-- Basic clear/draw, then voxel mesh rendering
+- ✅ Fix compilation errors on arm64 macos
+- ✅ Image views, render pass, framebuffers
+- ✅ Command pool/buffers and synchronization
+- ✅ Graphics pipeline and shader integration
+- ✅ Basic clear/draw render loop
+- ✅ Voxel mesh generation system
+- 🔄 Integrate mesh rendering with graphics pipeline
+- 🔄 Camera system and MVP matrices
+- 🔄 Chunk manager integration with rendering
+- 🔄 Texture atlas support
 
 ### 7. Contribute
 If you would like to contribute to the project, please fork the repository and submit a pull request with your changes.
