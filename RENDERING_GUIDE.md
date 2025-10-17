@@ -63,7 +63,7 @@ mesh->createIndexBuffer(indices);
 
 ### Vertex Structure
 
-The `Vertex` struct defines the layout for mesh data:
+The `Vertex` struct defines the layout for mesh data (defined in `src/graphics/mesh.h`):
 
 ```cpp
 struct Vertex {
@@ -72,6 +72,8 @@ struct Vertex {
     float texCoord[2];  // Texture coordinates (u, v)
 };
 ```
+
+Note: The actual implementation uses C-style arrays for direct memory layout control, which is common practice for GPU vertex data.
 
 This layout matches the shader expectations with:
 - Location 0: vec3 position
@@ -169,7 +171,7 @@ To render actual voxel meshes:
 
 ## Command Buffer Recording
 
-Command buffers are recorded per frame in `Renderer::recordCommandBuffer`:
+Command buffers are recorded per frame in `Renderer::recordCommandBuffer`. Currently, the implementation only clears the screen:
 
 ```cpp
 // Begin command buffer
@@ -178,19 +180,12 @@ vkBeginCommandBuffer(commandBuffer, &beginInfo);
 // Begin render pass (clears to dark blue)
 vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-// Bind pipeline
-vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-
-// Bind vertex buffer
-VkBuffer vertexBuffers[] = {mesh->getVertexBuffer()};
-VkDeviceSize offsets[] = {0};
-vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-
-// Bind index buffer
-vkCmdBindIndexBuffer(commandBuffer, mesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
-
-// Draw
-vkCmdDrawIndexed(commandBuffer, mesh->getIndexCount(), 1, 0, 0, 0);
+// TODO: Draw commands will be added here for mesh rendering
+// Example for future mesh rendering:
+//   vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+//   vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, &offset);
+//   vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+//   vkCmdDrawIndexed(commandBuffer, indexCount, 1, 0, 0, 0);
 
 // End render pass and command buffer
 vkCmdEndRenderPass(commandBuffer);
@@ -236,7 +231,7 @@ Resources are destroyed in reverse order of creation to maintain dependencies:
 
 ### Mesh Generation
 
-- Face culling eliminates ~80% of faces in typical chunks
+- Face culling typically eliminates a large percentage of faces in dense chunks
 - Pre-allocate vertex/index vectors for known maximum size
 - Consider implementing greedy meshing for larger quads
 
