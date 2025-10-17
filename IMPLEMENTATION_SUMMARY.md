@@ -68,7 +68,8 @@ This implementation adds a complete camera system with keyboard input to the vox
 
 ### Camera System
 - **Coordinate System**: Right-handed (Vulkan convention)
-- **Initial Position**: (8.0, 8.0, 20.0)
+- **Default Constructor Position**: (0.0, 0.0, 5.0)
+- **Runtime Initial Position** (set in renderer.cpp): (8.0, 8.0, 20.0)
 - **Movement Speed**: 3.0 units/second
 - **Rotation Speed**: 1.5 radians/second
 - **FOV**: 45 degrees
