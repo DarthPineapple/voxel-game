@@ -1,7 +1,12 @@
-#ifndef MATH_H
-#define MATH_H
+#ifndef MATH_UTILS_H
+#define MATH_UTILS_H
 
 #include <cmath>
+#include <algorithm>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 namespace Math {
 
@@ -10,7 +15,7 @@ namespace Math {
     }
 
     inline float clamp(float value, float min, float max) {
-        return std::fmax(min, std::fmin(value, max));
+        return std::max(min, std::min(value, max));
     }
 
     inline float toRadians(float degrees) {
@@ -48,4 +53,4 @@ namespace Math {
 
 }
 
-#endif // MATH_H
+#endif // MATH_UTILS_H

@@ -1,4 +1,4 @@
-#include "math.h"
+#include "math_utils.h"
 #include <cmath>
 
 // Implementation file for math utilities

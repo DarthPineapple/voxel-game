@@ -69,3 +69,15 @@ vcpkg_installed/
 # Core dumps
 core
 core.*
+
+# CodeQL
+.codeql/
+.codeql-cache/
+codeql/
+codeql-db/
+codeql-database/
+codeql-dbs/
+codeql-results/
+codeql-packs/
+codeql-queries/
+codeql-workspace/

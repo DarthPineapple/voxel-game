@@ -3,6 +3,11 @@
 ## Project Overview
 This project is an efficient block-based voxel game that utilizes cubic chunks and dynamic chunk loading. The graphics are rendered using Vulkan, providing high performance and flexibility.
 
+## Current Status
+- Vulkan instance, surface, physical device, logical device, and swapchain creation are implemented.
+- Render loop is a placeholder; no command buffers, image views, or rendering pipeline yet.
+- macOS (MoltenVK) portability enumeration and subset extension handling are in place.
+
 ## Features
 - Block-based voxel world
 - Cubic chunk management
@@ -12,8 +17,10 @@ This project is an efficient block-based voxel game that utilizes cubic chunks a
 ## Prerequisites
 Before you begin, ensure you have the following installed:
 - CMake (version 3.10 or higher)
-- Vulkan SDK
+- Vulkan SDK (1.2+; 1.3 recommended)
+- GLFW (3.3+ with Vulkan support)
 - A C++ compiler (e.g., GCC, Clang, MSVC)
+- macOS only: MoltenVK (bundled with Vulkan SDK). Portability enumeration is enabled in code.
 
 ## Step-by-Step Checklist
 
@@ -25,7 +32,9 @@ cd voxel-game
 ```
 
 ### 2. Install Dependencies
-Make sure you have the Vulkan SDK installed. Follow the instructions on the official Vulkan website for your operating system.
+- Install the Vulkan SDK for your OS.
+- Install GLFW (package manager or build from source with Vulkan enabled).
+- macOS: ensure MoltenVK is installed and available via the Vulkan SDK.
 
 ### 3. Build the Project
 Navigate to the project directory and create a build directory:
@@ -56,6 +65,30 @@ You can modify the game by editing the following files:
 
 ### 6. Add Assets
 To add new textures or shaders, place them in the `assets/textures` or `assets/shaders` directories, respectively. Update the rendering code to utilize these assets.
+
+### Platform Notes
+- macOS (MoltenVK):
+  - Instance uses VK_KHR_portability_enumeration and the enumerate portability flag.
+  - Device enables VK_KHR_portability_subset when available.
+  - Requires macOS 11+ and a compatible GPU.
+- Linux:
+  - Ensure Vulkan loader/ICD and GPU drivers are installed (e.g., mesa-vulkan-drivers).
+- Windows:
+  - Install latest GPU drivers and the Vulkan SDK.
+
+## Troubleshooting
+- Compile error: VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME undefined
+  - Update Vulkan headers/SDK; a fallback macro is defined in the code.
+- vkCreateInstance failed
+  - Ensure glfwGetRequiredInstanceExtensions returns non-empty; update GLFW and Vulkan SDK.
+- No surface formats/present modes
+  - Ensure the window is created, visible, and not minimized; update GPU drivers.
+
+## Roadmap
+- Image views, render pass, framebuffers
+- Command pool/buffers and synchronization
+- Graphics pipeline and shader integration
+- Basic clear/draw, then voxel mesh rendering
 
 ### 7. Contribute
 If you would like to contribute to the project, please fork the repository and submit a pull request with your changes.
