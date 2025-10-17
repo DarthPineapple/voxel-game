@@ -51,9 +51,10 @@
 ## File Size Guidelines
 
 - Keep individual files under 200 lines when possible
-- Split large classes into multiple files if they exceed 300 lines
+- Split large classes into multiple files if they exceed 250 lines
 - Extract helper functions into utility files
 - Consider creating separate classes for distinct functionality
+- Current project maximum: 162 lines (device.cpp)
 
 ## Code Quality
 

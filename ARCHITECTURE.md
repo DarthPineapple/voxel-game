@@ -38,7 +38,7 @@ src/
   - Renderer: High-level orchestration of all components
 
 ### Scalability
-- No single file exceeds 165 lines (previously: renderer.cpp was 351 lines)
+- No single file exceeds 165 lines; most are under 100 lines (previously: renderer.cpp was 351 lines)
 - Clear separation of concerns allows parallel development
 - Easy to add new rendering features without modifying core components
 
