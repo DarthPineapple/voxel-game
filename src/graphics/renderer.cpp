@@ -16,6 +16,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <cstring>
+#include <algorithm>
 
 Renderer::Renderer()
     : window(nullptr), vulkanInstance(nullptr), device(nullptr), swapchain(nullptr),
@@ -439,4 +440,109 @@ uint32_t Renderer::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags pro
     }
     
     throw std::runtime_error("Failed to find suitable memory type!");
+}
+
+void Renderer::logMeshInfo() const {
+    if (!testMesh) {
+        std::cout << "[Mesh] No mesh available" << std::endl;
+        return;
+    }
+    
+    std::cout << "[Mesh] Vertex count: " << testMesh->getVertexCount() << std::endl;
+    std::cout << "[Mesh] Index count: " << testMesh->getIndexCount() << std::endl;
+    std::cout << "[Mesh] Triangle count: " << (testMesh->getIndexCount() / 3) << std::endl;
+    std::cout << "[Mesh] Vertex buffer: " << testMesh->getVertexBuffer() << std::endl;
+    std::cout << "[Mesh] Index buffer: " << testMesh->getIndexBuffer() << std::endl;
+    std::cout << "[Mesh] Vertex buffer size: " << (testMesh->getVertexCount() * sizeof(Vertex)) 
+              << " bytes" << std::endl;
+    std::cout << "[Mesh] Index buffer size: " << (testMesh->getIndexCount() * sizeof(uint32_t)) 
+              << " bytes" << std::endl;
+    
+    // Log sample vertices (first 3 and last 3)
+    const auto& vertices = testMesh->getVertices();
+    if (!vertices.empty()) {
+        size_t sampleCount = std::min(size_t(3), vertices.size());
+        std::cout << "[Mesh] Sample vertices (first " << sampleCount << "):" << std::endl;
+        for (size_t i = 0; i < sampleCount; i++) {
+            const Vertex& v = vertices[i];
+            std::cout << "  Vertex " << i << ": pos(" << v.position[0] << ", " 
+                      << v.position[1] << ", " << v.position[2] << ") "
+                      << "normal(" << v.normal[0] << ", " << v.normal[1] << ", " 
+                      << v.normal[2] << ") "
+                      << "uv(" << v.texCoord[0] << ", " << v.texCoord[1] << ")" << std::endl;
+        }
+        
+        if (vertices.size() > 3) {
+            std::cout << "[Mesh] Sample vertices (last " << sampleCount << "):" << std::endl;
+            for (size_t i = vertices.size() - sampleCount; i < vertices.size(); i++) {
+                const Vertex& v = vertices[i];
+                std::cout << "  Vertex " << i << ": pos(" << v.position[0] << ", " 
+                          << v.position[1] << ", " << v.position[2] << ") "
+                          << "normal(" << v.normal[0] << ", " << v.normal[1] << ", " 
+                          << v.normal[2] << ") "
+                          << "uv(" << v.texCoord[0] << ", " << v.texCoord[1] << ")" << std::endl;
+            }
+        }
+    }
+}
+
+void Renderer::logTransformedMeshInfo() const {
+    if (!testMesh || !camera) {
+        std::cout << "[Transformed Mesh] No mesh or camera available" << std::endl;
+        return;
+    }
+    
+    // Get MVP matrix
+    float aspectRatio = swapchain->getSwapchainExtent().width / 
+                       (float)swapchain->getSwapchainExtent().height;
+    float mvp[16];
+    camera->getMVPMatrix(mvp, aspectRatio);
+    
+    std::cout << "[Transform] MVP Matrix:" << std::endl;
+    for (int row = 0; row < 4; row++) {
+        std::cout << "  [";
+        for (int col = 0; col < 4; col++) {
+            std::cout << mvp[col * 4 + row];
+            if (col < 3) std::cout << ", ";
+        }
+        std::cout << "]" << std::endl;
+    }
+    
+    std::cout << "[Transform] Viewport: " << swapchain->getSwapchainExtent().width 
+              << "x" << swapchain->getSwapchainExtent().height << std::endl;
+    std::cout << "[Transform] Aspect ratio: " << aspectRatio << std::endl;
+    
+    // Transform sample vertices
+    const auto& vertices = testMesh->getVertices();
+    if (!vertices.empty()) {
+        size_t sampleCount = std::min(size_t(3), vertices.size());
+        std::cout << "[Transform] Sample transformed vertices (first " << sampleCount << "):" << std::endl;
+        
+        for (size_t i = 0; i < sampleCount; i++) {
+            const Vertex& v = vertices[i];
+            
+            // Apply MVP transformation
+            float x = v.position[0];
+            float y = v.position[1];
+            float z = v.position[2];
+            float w = 1.0f;
+            
+            float tx = mvp[0] * x + mvp[4] * y + mvp[8] * z + mvp[12] * w;
+            float ty = mvp[1] * x + mvp[5] * y + mvp[9] * z + mvp[13] * w;
+            float tz = mvp[2] * x + mvp[6] * y + mvp[10] * z + mvp[14] * w;
+            float tw = mvp[3] * x + mvp[7] * y + mvp[11] * z + mvp[15] * w;
+            
+            // Perspective divide
+            if (tw != 0.0f) {
+                tx /= tw;
+                ty /= tw;
+                tz /= tw;
+            }
+            
+            std::cout << "  Vertex " << i << ": " << std::endl;
+            std::cout << "    Original: (" << x << ", " << y << ", " << z << ")" << std::endl;
+            std::cout << "    Transformed (clip space): (" << tx << ", " << ty << ", " << tz << ", " << tw << ")" << std::endl;
+            std::cout << "    NDC: (" << tx << ", " << ty << ", " << tz << ")" << std::endl;
+        }
+    }
 }

@@ -28,6 +28,11 @@ public:
     void cleanup();
     
     Camera* getCamera() { return camera; }
+    
+    // Debug methods
+    Mesh* getTestMesh() { return testMesh; }
+    void logMeshInfo() const;
+    void logTransformedMeshInfo() const;
 
 private:
     Window* window;
