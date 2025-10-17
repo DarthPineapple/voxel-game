@@ -4,10 +4,14 @@
 #include <stdexcept>
 #include <vector>
 #include <cstring>
+#include <algorithm> // added for std::find
 
-// Fallback for older SDK versions
-#ifndef VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME
-#define VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME "VK_KHR_portability_subset"
+// Portability fallbacks for older SDKs
+#ifndef VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
+#define VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME "VK_KHR_portability_enumeration"
+#endif
+#ifndef VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR
+#define VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR 0x00000001
 #endif
 
 VulkanInstance::VulkanInstance() : instance(VK_NULL_HANDLE), surface(VK_NULL_HANDLE) {
@@ -38,7 +42,12 @@ void VulkanInstance::createInstance() {
 
 #ifdef __APPLE__
     // macOS MoltenVK portability
-    extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+    auto hasExt = [&](const char* name) {
+        return std::find(extensions.begin(), extensions.end(), name) != extensions.end();
+    };
+    if (!hasExt(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME)) {
+        extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+    }
     createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 #endif
 
@@ -67,12 +76,4 @@ void VulkanInstance::cleanup() {
         vkDestroyInstance(instance, nullptr);
         instance = VK_NULL_HANDLE;
     }
-}
-
-VkInstance VulkanInstance::getInstance() const {
-    return instance;
-}
-
-VkSurfaceKHR VulkanInstance::getSurface() const {
-    return surface;
 }
