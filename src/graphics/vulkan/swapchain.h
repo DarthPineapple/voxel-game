@@ -4,12 +4,14 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 
+class Window;
+
 class Swapchain {
 public:
-    Swapchain(VkDevice device, VkSurfaceKHR surface);
+    Swapchain(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
     ~Swapchain();
 
-    void createSwapchain();
+    void createSwapchain(Window* window);
     void cleanup();
 
     VkSwapchainKHR getSwapchain() const;
@@ -19,15 +21,16 @@ public:
 
 private:
     VkDevice device;
+    VkPhysicalDevice physicalDevice;
     VkSurfaceKHR surface;
     VkSwapchainKHR swapchain;
     std::vector<VkImage> swapchainImages;
     VkFormat swapchainImageFormat;
     VkExtent2D swapchainExtent;
 
-    void chooseSwapchainSurfaceFormat();
-    void chooseSwapchainPresentMode();
-    void chooseSwapchainExtent();
+    VkSurfaceFormatKHR chooseSwapchainSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats) const;
+    VkPresentModeKHR chooseSwapchainPresentMode(const std::vector<VkPresentModeKHR>& presentModes) const;
+    VkExtent2D chooseSwapchainExtent(const VkSurfaceCapabilitiesKHR& capabilities, Window* window) const;
 };
 
 #endif // SWAPCHAIN_H

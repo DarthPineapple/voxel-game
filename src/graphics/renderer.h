@@ -3,9 +3,11 @@
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include <vector>
 
 class Window;
+class VulkanInstance;
+class Device;
+class Swapchain;
 
 class Renderer {
 public:
@@ -19,23 +21,10 @@ public:
 private:
     Window* window;
     
-    // Vulkan objects
-    VkInstance instance;
-    VkSurfaceKHR surface;
-    VkPhysicalDevice physicalDevice;
-    VkDevice device;
-    VkQueue graphicsQueue;
-    VkQueue presentQueue;
-    VkSwapchainKHR swapchain;
-    std::vector<VkImage> swapchainImages;
-    VkFormat swapchainImageFormat;
-    VkExtent2D swapchainExtent;
-    
-    void createInstance();
-    void createSurface();
-    void pickPhysicalDevice();
-    void createLogicalDevice();
-    void createSwapchain();
+    // Vulkan components - now using modular classes
+    VulkanInstance* vulkanInstance;
+    Device* device;
+    Swapchain* swapchain;
 };
 
 #endif // RENDERER_H
