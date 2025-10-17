@@ -28,6 +28,10 @@ public:
     VkBuffer getVertexBuffer() const { return vertexBuffer; }
     VkBuffer getIndexBuffer() const { return indexBuffer; }
     uint32_t getIndexCount() const { return indexCount; }
+    uint32_t getVertexCount() const { return vertexCount; }
+    
+    // Debug methods
+    const std::vector<Vertex>& getVertices() const { return vertices; }
 
 private:
     VkDevice device;
@@ -37,6 +41,10 @@ private:
     VkBuffer indexBuffer;
     VkDeviceMemory indexBufferMemory;
     uint32_t indexCount;
+    uint32_t vertexCount;
+    
+    // Store a copy of vertices for debug purposes
+    std::vector<Vertex> vertices;
 
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, 
                      VkMemoryPropertyFlags properties, VkBuffer& buffer, 

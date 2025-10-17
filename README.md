@@ -78,6 +78,7 @@ The application will:
 6. Allow camera movement with WASD keys and rotation with arrow keys
 
 For camera controls, see [CAMERA_CONTROLS.md](CAMERA_CONTROLS.md).
+For debug mode and frame-by-frame analysis, see [DEBUG_MODE.md](DEBUG_MODE.md).
 
 ### 6. Modify and Extend
 You can modify the game by editing the following files:

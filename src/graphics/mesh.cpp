@@ -6,7 +6,7 @@ Mesh::Mesh(VkDevice device, VkPhysicalDevice physicalDevice)
     : device(device), physicalDevice(physicalDevice), 
       vertexBuffer(VK_NULL_HANDLE), vertexBufferMemory(VK_NULL_HANDLE),
       indexBuffer(VK_NULL_HANDLE), indexBufferMemory(VK_NULL_HANDLE),
-      indexCount(0) {
+      indexCount(0), vertexCount(0) {
 }
 
 Mesh::~Mesh() {
@@ -14,6 +14,10 @@ Mesh::~Mesh() {
 }
 
 void Mesh::createVertexBuffer(const std::vector<Vertex>& vertices) {
+    // Store vertices for debug access
+    this->vertices = vertices;
+    vertexCount = static_cast<uint32_t>(vertices.size());
+    
     VkDeviceSize bufferSize = sizeof(Vertex) * vertices.size();
 
     createBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
