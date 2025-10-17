@@ -7,7 +7,8 @@
 
 Pipeline::Pipeline(VkDevice device, VkRenderPass renderPass, VkExtent2D extent)
     : device(device), renderPass(renderPass), extent(extent), 
-      pipeline(VK_NULL_HANDLE), pipelineLayout(VK_NULL_HANDLE) {
+      pipeline(VK_NULL_HANDLE), pipelineLayout(VK_NULL_HANDLE),
+      descriptorSetLayout(VK_NULL_HANDLE) {
 }
 
 Pipeline::~Pipeline() {
@@ -15,6 +16,9 @@ Pipeline::~Pipeline() {
 }
 
 void Pipeline::createPipeline(const std::string& vertShaderPath, const std::string& fragShaderPath) {
+    // Create descriptor set layout first
+    createDescriptorSetLayout();
+    
     auto vertShaderCode = readFile(vertShaderPath);
     auto fragShaderCode = readFile(fragShaderPath);
 
@@ -122,6 +126,8 @@ void Pipeline::createPipeline(const std::string& vertShaderPath, const std::stri
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.setLayoutCount = 1;
+    pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 
     if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
         vkDestroyShaderModule(device, vertShaderModule, nullptr);
@@ -161,6 +167,28 @@ void Pipeline::cleanup() {
     if (pipelineLayout != VK_NULL_HANDLE) {
         vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
         pipelineLayout = VK_NULL_HANDLE;
+    }
+    if (descriptorSetLayout != VK_NULL_HANDLE) {
+        vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+        descriptorSetLayout = VK_NULL_HANDLE;
+    }
+}
+
+void Pipeline::createDescriptorSetLayout() {
+    VkDescriptorSetLayoutBinding uboLayoutBinding{};
+    uboLayoutBinding.binding = 0;
+    uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    uboLayoutBinding.descriptorCount = 1;
+    uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    uboLayoutBinding.pImmutableSamplers = nullptr;
+
+    VkDescriptorSetLayoutCreateInfo layoutInfo{};
+    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutInfo.bindingCount = 1;
+    layoutInfo.pBindings = &uboLayoutBinding;
+
+    if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create descriptor set layout!");
     }
 }
 

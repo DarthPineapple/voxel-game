@@ -17,7 +17,10 @@ public:
     GLFWwindow* getGLFWwindow() const;
     int getWidth() const { return width; }
     int getHeight() const { return height; }
-
+    
+    // Keyboard input queries
+    bool isKeyPressed(int key) const;
+    
 private:
     GLFWwindow* window;
     int width;

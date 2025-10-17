@@ -1,5 +1,6 @@
 #include "renderer.h"
 #include "engine/window.h"
+#include "engine/camera.h"
 #include "vulkan/vulkan_instance.h"
 #include "vulkan/device.h"
 #include "vulkan/swapchain.h"
@@ -14,12 +15,15 @@
 #include "world/mesh_generator.h"
 #include <iostream>
 #include <stdexcept>
+#include <cstring>
 
 Renderer::Renderer()
     : window(nullptr), vulkanInstance(nullptr), device(nullptr), swapchain(nullptr),
       imageViews(nullptr), renderPass(nullptr), framebuffers(nullptr),
       commandPool(nullptr), syncObjects(nullptr), pipeline(nullptr), testMesh(nullptr),
-      currentFrame(0) {
+      camera(nullptr), uniformBuffers(nullptr), uniformBuffersMemory(nullptr),
+      uniformBuffersMapped(nullptr), descriptorPool(VK_NULL_HANDLE),
+      descriptorSets(nullptr), currentFrame(0) {
 }
 
 Renderer::~Renderer() {
@@ -70,6 +74,13 @@ void Renderer::init(Window* window) {
     pipeline = new Pipeline(device->getDevice(), renderPass->getRenderPass(), swapchain->getSwapchainExtent());
     pipeline->createPipeline("assets/shaders/shader.vert.spv", "assets/shaders/shader.frag.spv");
     
+    // Create uniform buffers for MVP matrices
+    createUniformBuffers();
+    
+    // Create descriptor pool and sets
+    createDescriptorPool();
+    createDescriptorSets();
+    
     // Generate test mesh from a chunk
     Chunk testChunk(0, 0, 0);
     testChunk.load();
@@ -82,6 +93,10 @@ void Renderer::init(Window* window) {
     testMesh = new Mesh(device->getDevice(), device->getPhysicalDevice());
     testMesh->createVertexBuffer(vertices);
     testMesh->createIndexBuffer(indices);
+    
+    // Create camera
+    camera = new Camera();
+    camera->setPosition(8.0f, 8.0f, 20.0f);
     
     std::cout << "Vulkan renderer initialized successfully!" << std::endl;
     std::cout << "Generated mesh with " << vertices.size() << " vertices and " 
@@ -109,6 +124,9 @@ void Renderer::render() {
     } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
         throw std::runtime_error("Failed to acquire swapchain image!");
     }
+    
+    // Update uniform buffer with current MVP matrix
+    updateUniformBuffer(currentFrame);
     
     // Reset the fence for this frame
     vkResetFences(device->getDevice(), 1, &fences[currentFrame]);
@@ -187,6 +205,11 @@ void Renderer::recordCommandBuffer(size_t imageIndex) {
     // Bind the graphics pipeline
     vkCmdBindPipeline(commandBuffers[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getPipeline());
     
+    // Bind descriptor sets (for uniform buffers)
+    vkCmdBindDescriptorSets(commandBuffers[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS,
+                           pipeline->getPipelineLayout(), 0, 1, &descriptorSets[currentFrame],
+                           0, nullptr);
+    
     // Bind vertex buffer
     VkBuffer vertexBuffers[] = {testMesh->getVertexBuffer()};
     VkDeviceSize offsets[] = {0};
@@ -208,6 +231,39 @@ void Renderer::recordCommandBuffer(size_t imageIndex) {
 void Renderer::cleanup() {
     if (device && device->getDevice() != VK_NULL_HANDLE) {
         vkDeviceWaitIdle(device->getDevice());
+    }
+    
+    // Clean up uniform buffers
+    if (uniformBuffers) {
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            if (uniformBuffers[i] != VK_NULL_HANDLE) {
+                vkDestroyBuffer(device->getDevice(), uniformBuffers[i], nullptr);
+            }
+            if (uniformBuffersMemory && uniformBuffersMemory[i] != VK_NULL_HANDLE) {
+                vkUnmapMemory(device->getDevice(), uniformBuffersMemory[i]);
+                vkFreeMemory(device->getDevice(), uniformBuffersMemory[i], nullptr);
+            }
+        }
+        delete[] uniformBuffers;
+        delete[] uniformBuffersMemory;
+        uniformBuffers = nullptr;
+        uniformBuffersMemory = nullptr;
+    }
+    
+    // Clean up descriptor pool
+    if (descriptorPool != VK_NULL_HANDLE) {
+        vkDestroyDescriptorPool(device->getDevice(), descriptorPool, nullptr);
+        descriptorPool = VK_NULL_HANDLE;
+    }
+    
+    if (descriptorSets) {
+        delete[] descriptorSets;
+        descriptorSets = nullptr;
+    }
+    
+    if (camera) {
+        delete camera;
+        camera = nullptr;
     }
     
     if (testMesh) {
@@ -269,4 +325,119 @@ void Renderer::cleanup() {
         delete vulkanInstance;
         vulkanInstance = nullptr;
     }
+}
+
+void Renderer::createUniformBuffers() {
+    VkDeviceSize bufferSize = sizeof(float) * 16; // 4x4 matrix
+    
+    uniformBuffers = new VkBuffer[MAX_FRAMES_IN_FLIGHT];
+    uniformBuffersMemory = new VkDeviceMemory[MAX_FRAMES_IN_FLIGHT];
+    
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        VkBufferCreateInfo bufferInfo{};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = bufferSize;
+        bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        
+        if (vkCreateBuffer(device->getDevice(), &bufferInfo, nullptr, &uniformBuffers[i]) != VK_SUCCESS) {
+            throw std::runtime_error("Failed to create uniform buffer!");
+        }
+        
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(device->getDevice(), uniformBuffers[i], &memRequirements);
+        
+        VkMemoryAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocInfo.allocationSize = memRequirements.size;
+        allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits,
+                                                   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
+                                                   VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        
+        if (vkAllocateMemory(device->getDevice(), &allocInfo, nullptr, &uniformBuffersMemory[i]) != VK_SUCCESS) {
+            throw std::runtime_error("Failed to allocate uniform buffer memory!");
+        }
+        
+        vkBindBufferMemory(device->getDevice(), uniformBuffers[i], uniformBuffersMemory[i], 0);
+    }
+}
+
+void Renderer::createDescriptorPool() {
+    VkDescriptorPoolSize poolSize{};
+    poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    poolSize.descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+    
+    VkDescriptorPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.poolSizeCount = 1;
+    poolInfo.pPoolSizes = &poolSize;
+    poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+    
+    if (vkCreateDescriptorPool(device->getDevice(), &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create descriptor pool!");
+    }
+}
+
+void Renderer::createDescriptorSets() {
+    VkDescriptorSetLayout layouts[MAX_FRAMES_IN_FLIGHT];
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        layouts[i] = pipeline->getDescriptorSetLayout();
+    }
+    
+    VkDescriptorSetAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfo.descriptorPool = descriptorPool;
+    allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+    allocInfo.pSetLayouts = layouts;
+    
+    descriptorSets = new VkDescriptorSet[MAX_FRAMES_IN_FLIGHT];
+    if (vkAllocateDescriptorSets(device->getDevice(), &allocInfo, descriptorSets) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to allocate descriptor sets!");
+    }
+    
+    // Update descriptor sets
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBuffers[i];
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(float) * 16;
+        
+        VkWriteDescriptorSet descriptorWrite{};
+        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrite.dstSet = descriptorSets[i];
+        descriptorWrite.dstBinding = 0;
+        descriptorWrite.dstArrayElement = 0;
+        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrite.descriptorCount = 1;
+        descriptorWrite.pBufferInfo = &bufferInfo;
+        
+        vkUpdateDescriptorSets(device->getDevice(), 1, &descriptorWrite, 0, nullptr);
+    }
+}
+
+void Renderer::updateUniformBuffer(uint32_t currentImage) {
+    float aspectRatio = swapchain->getSwapchainExtent().width / 
+                       (float)swapchain->getSwapchainExtent().height;
+    
+    float mvp[16];
+    camera->getMVPMatrix(mvp, aspectRatio);
+    
+    void* data;
+    vkMapMemory(device->getDevice(), uniformBuffersMemory[currentImage], 0, sizeof(mvp), 0, &data);
+    std::memcpy(data, mvp, sizeof(mvp));
+    vkUnmapMemory(device->getDevice(), uniformBuffersMemory[currentImage]);
+}
+
+uint32_t Renderer::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
+    VkPhysicalDeviceMemoryProperties memProperties;
+    vkGetPhysicalDeviceMemoryProperties(device->getPhysicalDevice(), &memProperties);
+    
+    for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+        if ((typeFilter & (1 << i)) && 
+            (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+            return i;
+        }
+    }
+    
+    throw std::runtime_error("Failed to find suitable memory type!");
 }

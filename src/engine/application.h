@@ -5,6 +5,7 @@
 
 class Renderer;
 class ChunkManager;
+class Camera;
 
 class Application {
 public:
@@ -20,6 +21,11 @@ private:
     Renderer* renderer;
     ChunkManager* chunkManager;
     bool isRunning;
+    
+    // Timing
+    double lastTime;
+    
+    void processInput(float deltaTime);
 };
 
 #endif // APPLICATION_H

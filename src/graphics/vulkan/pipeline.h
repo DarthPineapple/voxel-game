@@ -15,6 +15,7 @@ public:
 
     VkPipeline getPipeline() const { return pipeline; }
     VkPipelineLayout getPipelineLayout() const { return pipelineLayout; }
+    VkDescriptorSetLayout getDescriptorSetLayout() const { return descriptorSetLayout; }
 
 private:
     VkDevice device;
@@ -22,7 +23,9 @@ private:
     VkExtent2D extent;
     VkPipeline pipeline;
     VkPipelineLayout pipelineLayout;
+    VkDescriptorSetLayout descriptorSetLayout;
 
+    void createDescriptorSetLayout();
     std::vector<char> readFile(const std::string& filename);
     void createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule);
 };
