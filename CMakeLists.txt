@@ -23,6 +23,7 @@ add_executable(VoxelGame ${SOURCES})
 target_include_directories(VoxelGame PRIVATE
     src
     src/engine
+    src/graphics
     src/graphics/vulkan
     src/world
     src/utils
