@@ -2,6 +2,7 @@
 #define PIPELINE_H
 
 #include <vulkan/vulkan.h>
+#include <vector>
 
 class Pipeline {
 public:

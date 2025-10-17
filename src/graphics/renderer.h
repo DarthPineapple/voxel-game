@@ -1,22 +1,40 @@
+#ifndef RENDERER_H
+#define RENDERER_H
+
+#include <vulkan/vulkan.h>
+#include <vector>
+
+class Window;
+
 class Renderer {
 public:
     Renderer();
     ~Renderer();
 
-    void init();
+    void init(Window* window);
     void render();
     void cleanup();
 
 private:
-    void createCommandBuffers();
-    void drawFrame();
-    void updateUniformBuffer();
+    Window* window;
     
-    // Vulkan related members
+    // Vulkan objects
+    VkInstance instance;
+    VkSurfaceKHR surface;
+    VkPhysicalDevice physicalDevice;
     VkDevice device;
-    VkCommandPool commandPool;
-    std::vector<VkCommandBuffer> commandBuffers;
-    VkPipeline graphicsPipeline;
-    VkRenderPass renderPass;
-    VkFramebuffer framebuffer;
+    VkQueue graphicsQueue;
+    VkQueue presentQueue;
+    VkSwapchainKHR swapchain;
+    std::vector<VkImage> swapchainImages;
+    VkFormat swapchainImageFormat;
+    VkExtent2D swapchainExtent;
+    
+    void createInstance();
+    void createSurface();
+    void pickPhysicalDevice();
+    void createLogicalDevice();
+    void createSwapchain();
 };
+
+#endif // RENDERER_H

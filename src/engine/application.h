@@ -3,6 +3,9 @@
 
 #include "window.h"
 
+class Renderer;
+class ChunkManager;
+
 class Application {
 public:
     Application();
@@ -13,7 +16,9 @@ public:
     void cleanup();
 
 private:
-    Window window;
+    Window* window;
+    Renderer* renderer;
+    ChunkManager* chunkManager;
     bool isRunning;
 };
 

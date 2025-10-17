@@ -3,6 +3,7 @@
 
 class Voxel {
 public:
+    Voxel();
     Voxel(int x, int y, int z, int type);
     
     int getPositionX() const;

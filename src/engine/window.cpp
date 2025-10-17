@@ -1,36 +1,52 @@
 #include "window.h"
-#include <GLFW/glfw3.h>
 #include <stdexcept>
+#include <iostream>
 
-Window::Window(int width, int height, const char* title) 
-    : width(width), height(height), title(title) {
-    createWindow();
+Window::Window() 
+    : window(nullptr), width(800), height(600), title("Voxel Game") {
 }
 
 Window::~Window() {
-    destroyWindow();
+    destroy();
 }
 
-void Window::createWindow() {
+bool Window::create(const char* title, int width, int height) {
+    this->title = title;
+    this->width = width;
+    this->height = height;
+
     if (!glfwInit()) {
-        throw std::runtime_error("Failed to initialize GLFW");
+        std::cerr << "Failed to initialize GLFW" << std::endl;
+        return false;
     }
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    
     window = glfwCreateWindow(width, height, title, nullptr, nullptr);
     if (!window) {
+        std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
-        throw std::runtime_error("Failed to create GLFW window");
+        return false;
     }
+
+    return true;
 }
 
-void Window::destroyWindow() {
-    glfwDestroyWindow(window);
+void Window::destroy() {
+    if (window) {
+        glfwDestroyWindow(window);
+        window = nullptr;
+    }
     glfwTerminate();
 }
 
 void Window::processEvents() {
     glfwPollEvents();
+}
+
+bool Window::shouldClose() const {
+    return window && glfwWindowShouldClose(window);
 }
 
 GLFWwindow* Window::getGLFWwindow() const {
