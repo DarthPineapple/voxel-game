@@ -30,3 +30,9 @@ target_include_directories(VoxelGame PRIVATE
 
 # Link libraries
 target_link_libraries(VoxelGame Vulkan::Vulkan glfw)
+
+# Ensure this is placed after your target is created (add_executable/add_library).
+# If you use a different target variable/name, adjust accordingly.
+target_sources(VoxelGame PRIVATE
+    src/graphics/vulkan/vulkan_instance.cpp
+)
