@@ -14,6 +14,8 @@ This project is an efficient block-based voxel game that utilizes cubic chunks a
 - ✅ Mesh generation system for voxel chunks
 - ✅ Vertex and index buffer creation
 - ✅ **Mesh rendering integrated with Vulkan pipeline**
+- ✅ **Camera system with MVP matrices**
+- ✅ **Keyboard input for camera movement and rotation**
 - macOS (MoltenVK) portability enumeration and subset extension handling are in place.
 
 ## Features
@@ -73,6 +75,9 @@ The application will:
 3. Create mesh geometry using face culling optimization
 4. Upload vertex and index buffers to GPU
 5. Render the mesh with simple directional lighting
+6. Allow camera movement with WASD keys and rotation with arrow keys
+
+For camera controls, see [CAMERA_CONTROLS.md](CAMERA_CONTROLS.md).
 
 ### 6. Modify and Extend
 You can modify the game by editing the following files:
@@ -109,7 +114,8 @@ To add new textures or shaders, place them in the `assets/textures` or `assets/s
 - ✅ Basic clear/draw render loop
 - ✅ Voxel mesh generation system
 - ✅ **Integrate mesh rendering with graphics pipeline**
-- 🔄 Camera system and MVP matrices
+- ✅ **Camera system and MVP matrices**
+- ✅ **Keyboard input for camera control**
 - 🔄 Chunk manager integration with rendering
 - 🔄 Texture atlas support
 

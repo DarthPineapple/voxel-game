@@ -240,7 +240,6 @@ void Renderer::cleanup() {
                 vkDestroyBuffer(device->getDevice(), uniformBuffers[i], nullptr);
             }
             if (uniformBuffersMemory && uniformBuffersMemory[i] != VK_NULL_HANDLE) {
-                vkUnmapMemory(device->getDevice(), uniformBuffersMemory[i]);
                 vkFreeMemory(device->getDevice(), uniformBuffersMemory[i], nullptr);
             }
         }
