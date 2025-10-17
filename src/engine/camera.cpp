@@ -90,6 +90,7 @@ void Camera::getViewMatrix(float* matrix) const {
     
     // Create view matrix (inverse of camera transform)
     // Column-major order for Vulkan/GLSL
+    // Note: forward vector is negated because camera looks down -Z axis
     matrix[0] = rightX;
     matrix[1] = rightY;
     matrix[2] = rightZ;
@@ -100,14 +101,14 @@ void Camera::getViewMatrix(float* matrix) const {
     matrix[6] = upZ;
     matrix[7] = 0.0f;
     
-    matrix[8] = forwardX;
-    matrix[9] = forwardY;
-    matrix[10] = forwardZ;
+    matrix[8] = -forwardX;
+    matrix[9] = -forwardY;
+    matrix[10] = -forwardZ;
     matrix[11] = 0.0f;
     
     matrix[12] = -(rightX * posX + rightY * posY + rightZ * posZ);
     matrix[13] = -(upX * posX + upY * posY + upZ * posZ);
-    matrix[14] = -(forwardX * posX + forwardY * posY + forwardZ * posZ);
+    matrix[14] = -(-forwardX * posX + -forwardY * posY + -forwardZ * posZ);
     matrix[15] = 1.0f;
 }
 
