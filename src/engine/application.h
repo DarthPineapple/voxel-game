@@ -25,7 +25,15 @@ private:
     // Timing
     double lastTime;
     
+    // Debug mode
+    bool debugMode;
+    bool debugStepMode;
+    bool debugStepRequested;
+    bool prevF1KeyState;
+    bool prevF2KeyState;
+    
     void processInput(float deltaTime);
+    void logDebugInfo();
 };
 
 #endif // APPLICATION_H
