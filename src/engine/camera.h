@@ -12,7 +12,7 @@ public:
     
     // Movement control
     void setMovementInput(float forward, float right, float up);
-    void setRotationInput(float yaw, float pitch);
+    void setRotationInput(float pitch, float yaw);
     
     // Get view and projection matrices
     void getViewMatrix(float* matrix) const;
