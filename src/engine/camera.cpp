@@ -71,7 +71,7 @@ void Camera::setMovementInput(float forward, float right, float up) {
     inputUp = up;
 }
 
-void Camera::setRotationInput(float yawInput, float pitchInput) {
+void Camera::setRotationInput(float pitchInput, float yawInput) {
     inputYaw = yawInput;
     inputPitch = pitchInput;
 }
