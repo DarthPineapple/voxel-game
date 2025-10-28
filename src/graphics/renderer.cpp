@@ -27,7 +27,7 @@ Renderer::Renderer()
     : window(nullptr), vulkanInstance(nullptr), device(nullptr), swapchain(nullptr),
       imageViews(nullptr), renderPass(nullptr), framebuffers(nullptr),
       commandPool(nullptr), syncObjects(nullptr), pipeline(nullptr), overlayPipeline(nullptr),
-      testMesh(nullptr), overlayVertexBuffer(VK_NULL_HANDLE), overlayVertexBufferMemory(VK_NULL_HANDLE),
+      overlayVertexBuffer(VK_NULL_HANDLE), overlayVertexBufferMemory(VK_NULL_HANDLE),
       camera(nullptr), uniformBuffers(nullptr), uniformBuffersMemory(nullptr),
       uniformBuffersMapped(nullptr), descriptorPool(VK_NULL_HANDLE),
       descriptorSets(nullptr), currentFrame(0), startTime(0.0) {
@@ -95,19 +95,6 @@ void Renderer::init(Window* window) {
     // Create overlay vertex buffer
     createOverlayVertexBuffer();
     
-    // Generate test mesh from a chunk
-    Chunk testChunk(0, 0, 0);
-    testChunk.load();
-    
-    std::vector<Vertex> vertices;
-    std::vector<uint32_t> indices;
-    MeshGenerator::generateChunkMesh(testChunk, vertices, indices);
-    
-    // Create mesh and upload to GPU
-    testMesh = new Mesh(device->getDevice(), device->getPhysicalDevice());
-    testMesh->createVertexBuffer(vertices);
-    testMesh->createIndexBuffer(indices);
-    
     // Create camera
     camera = new Camera();
     camera->setPosition(8.0f, 8.0f, 20.0f);
@@ -116,8 +103,7 @@ void Renderer::init(Window* window) {
     startTime = glfwGetTime();
     
     std::cout << "Vulkan renderer initialized successfully!" << std::endl;
-    std::cout << "Generated mesh with " << vertices.size() << " vertices and " 
-              << indices.size() << " indices" << std::endl;
+    std::cout << "Chunks will be dynamically loaded around camera position" << std::endl;
 }
 
 void Renderer::render() {
@@ -231,33 +217,20 @@ void Renderer::recordCommandBuffer(size_t imageIndex) {
                            0, nullptr);
     
     // Render all chunk meshes
-    if (!chunkMeshes.empty()) {
-        for (const auto& pair : chunkMeshes) {
-            Mesh* mesh = pair.second;
-            if (mesh && mesh->getIndexCount() > 0) {
-                // Bind vertex buffer
-                VkBuffer vertexBuffers[] = {mesh->getVertexBuffer()};
-                VkDeviceSize offsets[] = {0};
-                vkCmdBindVertexBuffers(commandBuffers[currentFrame], 0, 1, vertexBuffers, offsets);
-                
-                // Bind index buffer
-                vkCmdBindIndexBuffer(commandBuffers[currentFrame], mesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
-                
-                // Draw the mesh
-                vkCmdDrawIndexed(commandBuffers[currentFrame], mesh->getIndexCount(), 1, 0, 0, 0);
-            }
+    for (const auto& pair : chunkMeshes) {
+        Mesh* mesh = pair.second;
+        if (mesh && mesh->getIndexCount() > 0) {
+            // Bind vertex buffer
+            VkBuffer vertexBuffers[] = {mesh->getVertexBuffer()};
+            VkDeviceSize offsets[] = {0};
+            vkCmdBindVertexBuffers(commandBuffers[currentFrame], 0, 1, vertexBuffers, offsets);
+            
+            // Bind index buffer
+            vkCmdBindIndexBuffer(commandBuffers[currentFrame], mesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
+            
+            // Draw the mesh
+            vkCmdDrawIndexed(commandBuffers[currentFrame], mesh->getIndexCount(), 1, 0, 0, 0);
         }
-    } else if (testMesh) {
-        // Fallback to test mesh for backward compatibility
-        VkBuffer vertexBuffers[] = {testMesh->getVertexBuffer()};
-        VkDeviceSize offsets[] = {0};
-        vkCmdBindVertexBuffers(commandBuffers[currentFrame], 0, 1, vertexBuffers, offsets);
-        
-        // Bind index buffer
-        vkCmdBindIndexBuffer(commandBuffers[currentFrame], testMesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
-        
-        // Draw the mesh
-        vkCmdDrawIndexed(commandBuffers[currentFrame], testMesh->getIndexCount(), 1, 0, 0, 0);
     }
     
     // Overlay disabled for now
@@ -334,12 +307,6 @@ void Renderer::cleanup() {
     if (overlayVertexBufferMemory != VK_NULL_HANDLE) {
         vkFreeMemory(device->getDevice(), overlayVertexBufferMemory, nullptr);
         overlayVertexBufferMemory = VK_NULL_HANDLE;
-    }
-    
-    if (testMesh) {
-        testMesh->cleanup();
-        delete testMesh;
-        testMesh = nullptr;
     }
     
     // Clean up all chunk meshes
@@ -528,23 +495,39 @@ uint32_t Renderer::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags pro
 }
 
 void Renderer::logMeshInfo() const {
-    if (!testMesh) {
-        std::cout << "[Mesh] No mesh available" << std::endl;
+    // Log information about all chunk meshes
+    if (chunkMeshes.empty()) {
+        std::cout << "[Mesh] No chunk meshes loaded" << std::endl;
         return;
     }
     
-    std::cout << "[Mesh] Vertex count: " << testMesh->getVertexCount() << std::endl;
-    std::cout << "[Mesh] Index count: " << testMesh->getIndexCount() << std::endl;
-    std::cout << "[Mesh] Triangle count: " << (testMesh->getIndexCount() / 3) << std::endl;
-    std::cout << "[Mesh] Vertex buffer: " << testMesh->getVertexBuffer() << std::endl;
-    std::cout << "[Mesh] Index buffer: " << testMesh->getIndexBuffer() << std::endl;
-    std::cout << "[Mesh] Vertex buffer size: " << (testMesh->getVertexCount() * sizeof(Vertex)) 
+    std::cout << "[Mesh] Total chunks: " << chunkMeshes.size() << std::endl;
+    
+    // Log info for first chunk mesh as a sample
+    const auto& firstPair = *chunkMeshes.begin();
+    Mesh* mesh = firstPair.second;
+    
+    if (!mesh) {
+        std::cout << "[Mesh] First chunk mesh is null" << std::endl;
+        return;
+    }
+    
+    std::cout << "[Mesh] Sample chunk position: (" 
+              << std::get<0>(firstPair.first) << ", "
+              << std::get<1>(firstPair.first) << ", "
+              << std::get<2>(firstPair.first) << ")" << std::endl;
+    std::cout << "[Mesh] Vertex count: " << mesh->getVertexCount() << std::endl;
+    std::cout << "[Mesh] Index count: " << mesh->getIndexCount() << std::endl;
+    std::cout << "[Mesh] Triangle count: " << (mesh->getIndexCount() / 3) << std::endl;
+    std::cout << "[Mesh] Vertex buffer: " << mesh->getVertexBuffer() << std::endl;
+    std::cout << "[Mesh] Index buffer: " << mesh->getIndexBuffer() << std::endl;
+    std::cout << "[Mesh] Vertex buffer size: " << (mesh->getVertexCount() * sizeof(Vertex)) 
               << " bytes" << std::endl;
-    std::cout << "[Mesh] Index buffer size: " << (testMesh->getIndexCount() * sizeof(uint32_t)) 
+    std::cout << "[Mesh] Index buffer size: " << (mesh->getIndexCount() * sizeof(uint32_t)) 
               << " bytes" << std::endl;
     
     // Log sample vertices (first 3 and last 3)
-    const auto& vertices = testMesh->getVertices();
+    const auto& vertices = mesh->getVertices();
     if (!vertices.empty()) {
         size_t sampleCount = std::min(size_t(3), vertices.size());
         std::cout << "[Mesh] Sample vertices (first " << sampleCount << "):" << std::endl;
@@ -572,8 +555,8 @@ void Renderer::logMeshInfo() const {
 }
 
 void Renderer::logTransformedMeshInfo() const {
-    if (!testMesh || !camera) {
-        std::cout << "[Transformed Mesh] No mesh or camera available" << std::endl;
+    if (chunkMeshes.empty() || !camera) {
+        std::cout << "[Transformed Mesh] No chunk meshes or camera available" << std::endl;
         return;
     }
     
@@ -597,8 +580,16 @@ void Renderer::logTransformedMeshInfo() const {
               << "x" << swapchain->getSwapchainExtent().height << std::endl;
     std::cout << "[Transform] Aspect ratio: " << aspectRatio << std::endl;
     
-    // Transform sample vertices
-    const auto& vertices = testMesh->getVertices();
+    // Transform sample vertices from first chunk mesh
+    const auto& firstPair = *chunkMeshes.begin();
+    Mesh* mesh = firstPair.second;
+    
+    if (!mesh) {
+        std::cout << "[Transform] First chunk mesh is null" << std::endl;
+        return;
+    }
+    
+    const auto& vertices = mesh->getVertices();
     if (!vertices.empty()) {
         size_t sampleCount = std::min(size_t(3), vertices.size());
         std::cout << "[Transform] Sample transformed vertices (first " << sampleCount << "):" << std::endl;
