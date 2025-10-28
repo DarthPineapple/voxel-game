@@ -216,8 +216,25 @@ void Renderer::recordCommandBuffer(size_t imageIndex) {
                            pipeline->getPipelineLayout(), 0, 1, &descriptorSets[currentFrame],
                            0, nullptr);
     
-    // Render all chunk meshes
+    // Render all chunk meshes in a consistent order
+    // Sort chunks by position to ensure deterministic rendering order
+    std::vector<std::pair<std::tuple<int, int, int>, Mesh*>> sortedChunks;
+    sortedChunks.reserve(chunkMeshes.size());
     for (const auto& pair : chunkMeshes) {
+        sortedChunks.push_back(pair);
+    }
+    
+    // Sort by Z, then Y, then X for consistent ordering
+    std::sort(sortedChunks.begin(), sortedChunks.end(),
+        [](const auto& a, const auto& b) {
+            if (std::get<2>(a.first) != std::get<2>(b.first))
+                return std::get<2>(a.first) < std::get<2>(b.first);
+            if (std::get<1>(a.first) != std::get<1>(b.first))
+                return std::get<1>(a.first) < std::get<1>(b.first);
+            return std::get<0>(a.first) < std::get<0>(b.first);
+        });
+    
+    for (const auto& pair : sortedChunks) {
         Mesh* mesh = pair.second;
         if (mesh && mesh->getIndexCount() > 0) {
             // Bind vertex buffer
@@ -706,17 +723,33 @@ void Renderer::updateChunkMeshes(ChunkManager* chunkManager) {
     // Track which chunks should have meshes
     std::unordered_map<std::tuple<int, int, int>, bool, TupleHash> activeChunks;
     
-    // Create meshes for new chunks
+    // Create or rebuild meshes for chunks
     for (Chunk* chunk : chunks) {
         auto key = std::make_tuple(chunk->getPosX(), chunk->getPosY(), chunk->getPosZ());
         activeChunks[key] = true;
         
-        // Create mesh if it doesn't exist
-        if (chunkMeshes.find(key) == chunkMeshes.end()) {
+        // Check if mesh needs to be created or rebuilt
+        auto it = chunkMeshes.find(key);
+        if (it == chunkMeshes.end()) {
+            // Create mesh for new chunk
             Mesh* mesh = createMeshForChunk(chunk);
             if (mesh) {
                 chunkMeshes[key] = mesh;
+                chunk->markMeshClean();
             }
+        } else if (chunk->needsMeshRebuild()) {
+            // Rebuild mesh for dirty chunk
+            if (it->second) {
+                it->second->cleanup();
+                delete it->second;
+            }
+            Mesh* mesh = createMeshForChunk(chunk);
+            if (mesh) {
+                chunkMeshes[key] = mesh;
+            } else {
+                chunkMeshes.erase(it);
+            }
+            chunk->markMeshClean();
         }
     }
     
