@@ -10,6 +10,7 @@
 #include "vulkan/command_pool.h"
 #include "vulkan/sync_objects.h"
 #include "vulkan/pipeline.h"
+#include "vulkan/overlay_pipeline.h"
 #include "mesh.h"
 #include "world/chunk.h"
 #include "world/mesh_generator.h"
@@ -17,14 +18,16 @@
 #include <stdexcept>
 #include <cstring>
 #include <algorithm>
+#include <GLFW/glfw3.h>
 
 Renderer::Renderer()
     : window(nullptr), vulkanInstance(nullptr), device(nullptr), swapchain(nullptr),
       imageViews(nullptr), renderPass(nullptr), framebuffers(nullptr),
-      commandPool(nullptr), syncObjects(nullptr), pipeline(nullptr), testMesh(nullptr),
+      commandPool(nullptr), syncObjects(nullptr), pipeline(nullptr), overlayPipeline(nullptr),
+      testMesh(nullptr), overlayVertexBuffer(VK_NULL_HANDLE), overlayVertexBufferMemory(VK_NULL_HANDLE),
       camera(nullptr), uniformBuffers(nullptr), uniformBuffersMemory(nullptr),
       uniformBuffersMapped(nullptr), descriptorPool(VK_NULL_HANDLE),
-      descriptorSets(nullptr), currentFrame(0) {
+      descriptorSets(nullptr), currentFrame(0), startTime(0.0) {
 }
 
 Renderer::~Renderer() {
@@ -75,12 +78,19 @@ void Renderer::init(Window* window) {
     pipeline = new Pipeline(device->getDevice(), renderPass->getRenderPass(), swapchain->getSwapchainExtent());
     pipeline->createPipeline("assets/shaders/shader.vert.spv", "assets/shaders/shader.frag.spv");
     
+    // Create overlay pipeline
+    overlayPipeline = new OverlayPipeline(device->getDevice(), renderPass->getRenderPass(), swapchain->getSwapchainExtent());
+    overlayPipeline->createPipeline("assets/shaders/overlay.vert.spv", "assets/shaders/overlay.frag.spv");
+    
     // Create uniform buffers for MVP matrices
     createUniformBuffers();
     
     // Create descriptor pool and sets
     createDescriptorPool();
     createDescriptorSets();
+    
+    // Create overlay vertex buffer
+    createOverlayVertexBuffer();
     
     // Generate test mesh from a chunk
     Chunk testChunk(0, 0, 0);
@@ -98,6 +108,9 @@ void Renderer::init(Window* window) {
     // Create camera
     camera = new Camera();
     camera->setPosition(8.0f, 8.0f, 20.0f);
+    
+    // Record start time for animation
+    startTime = glfwGetTime();
     
     std::cout << "Vulkan renderer initialized successfully!" << std::endl;
     std::cout << "Generated mesh with " << vertices.size() << " vertices and " 
@@ -225,6 +238,26 @@ void Renderer::recordCommandBuffer(size_t imageIndex) {
     // Draw the mesh
     vkCmdDrawIndexed(commandBuffers[currentFrame], testMesh->getIndexCount(), 1, 0, 0, 0);
     
+    // Draw overlay square
+    // Bind overlay pipeline
+    vkCmdBindPipeline(commandBuffers[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, overlayPipeline->getPipeline());
+    
+    // Calculate rotation angle based on time
+    float currentTime = static_cast<float>(glfwGetTime() - startTime);
+    float angle = currentTime; // Rotate 1 radian per second
+    
+    // Push the rotation angle constant
+    vkCmdPushConstants(commandBuffers[currentFrame], overlayPipeline->getPipelineLayout(),
+                      VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(float), &angle);
+    
+    // Bind overlay vertex buffer
+    VkBuffer overlayBuffers[] = {overlayVertexBuffer};
+    VkDeviceSize overlayOffsets[] = {0};
+    vkCmdBindVertexBuffers(commandBuffers[currentFrame], 0, 1, overlayBuffers, overlayOffsets);
+    
+    // Draw the overlay square (2 triangles = 6 vertices)
+    vkCmdDraw(commandBuffers[currentFrame], 6, 1, 0, 0);
+    
     vkCmdEndRenderPass(commandBuffers[currentFrame]);
     
     if (vkEndCommandBuffer(commandBuffers[currentFrame]) != VK_SUCCESS) {
@@ -269,10 +302,26 @@ void Renderer::cleanup() {
         camera = nullptr;
     }
     
+    // Clean up overlay vertex buffer
+    if (overlayVertexBuffer != VK_NULL_HANDLE) {
+        vkDestroyBuffer(device->getDevice(), overlayVertexBuffer, nullptr);
+        overlayVertexBuffer = VK_NULL_HANDLE;
+    }
+    if (overlayVertexBufferMemory != VK_NULL_HANDLE) {
+        vkFreeMemory(device->getDevice(), overlayVertexBufferMemory, nullptr);
+        overlayVertexBufferMemory = VK_NULL_HANDLE;
+    }
+    
     if (testMesh) {
         testMesh->cleanup();
         delete testMesh;
         testMesh = nullptr;
+    }
+    
+    if (overlayPipeline) {
+        overlayPipeline->cleanup();
+        delete overlayPipeline;
+        overlayPipeline = nullptr;
     }
     
     if (pipeline) {
@@ -550,4 +599,58 @@ void Renderer::logTransformedMeshInfo() const {
             }
         }
     }
+}
+
+void Renderer::createOverlayVertexBuffer() {
+    // Define a square as two triangles (6 vertices in 2D)
+    // Square centered at origin with size 2.0 (from -1 to 1)
+    float vertices[] = {
+        // First triangle
+        -1.0f, -1.0f,  // Bottom-left
+         1.0f, -1.0f,  // Bottom-right
+         1.0f,  1.0f,  // Top-right
+        
+        // Second triangle
+         1.0f,  1.0f,  // Top-right
+        -1.0f,  1.0f,  // Top-left
+        -1.0f, -1.0f   // Bottom-left
+    };
+    
+    VkDeviceSize bufferSize = sizeof(vertices);
+    
+    // Create buffer
+    VkBufferCreateInfo bufferInfo{};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = bufferSize;
+    bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    
+    if (vkCreateBuffer(device->getDevice(), &bufferInfo, nullptr, &overlayVertexBuffer) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create overlay vertex buffer!");
+    }
+    
+    // Get memory requirements
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(device->getDevice(), overlayVertexBuffer, &memRequirements);
+    
+    // Allocate memory
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits,
+                                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
+                                               VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    
+    if (vkAllocateMemory(device->getDevice(), &allocInfo, nullptr, &overlayVertexBufferMemory) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to allocate overlay vertex buffer memory!");
+    }
+    
+    // Bind memory to buffer
+    vkBindBufferMemory(device->getDevice(), overlayVertexBuffer, overlayVertexBufferMemory, 0);
+    
+    // Copy vertex data to buffer
+    void* data;
+    vkMapMemory(device->getDevice(), overlayVertexBufferMemory, 0, bufferSize, 0, &data);
+    std::memcpy(data, vertices, (size_t)bufferSize);
+    vkUnmapMemory(device->getDevice(), overlayVertexBufferMemory);
 }

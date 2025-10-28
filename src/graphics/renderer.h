@@ -15,6 +15,7 @@ class Framebuffers;
 class CommandPool;
 class SyncObjects;
 class Pipeline;
+class OverlayPipeline;
 class Mesh;
 class Camera;
 
@@ -47,9 +48,14 @@ private:
     CommandPool* commandPool;
     SyncObjects* syncObjects;
     Pipeline* pipeline;
+    OverlayPipeline* overlayPipeline;
     
     // Mesh for rendering
     Mesh* testMesh;
+    
+    // Overlay square mesh
+    VkBuffer overlayVertexBuffer;
+    VkDeviceMemory overlayVertexBufferMemory;
     
     // Camera
     Camera* camera;
@@ -65,6 +71,7 @@ private:
     
     // Rendering state
     size_t currentFrame;
+    double startTime;
     static const size_t MAX_FRAMES_IN_FLIGHT = 2;
     
     void createUniformBuffers();
@@ -73,6 +80,7 @@ private:
     void updateUniformBuffer(uint32_t currentImage);
     void recordCommandBuffer(size_t imageIndex);
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+    void createOverlayVertexBuffer();
 };
 
 #endif // RENDERER_H
