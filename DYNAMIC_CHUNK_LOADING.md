@@ -54,7 +54,7 @@ chunkManager->updateChunksAroundCamera(
     camera->getPosX(), 
     camera->getPosY(), 
     camera->getPosZ(), 
-    2  // render distance in chunks
+    10  // render distance in chunks
 );
 ```
 
@@ -64,6 +64,7 @@ You can modify the last parameter to change the render distance:
 - **3**: Medium (approximately 123 chunks)
 - **4**: Far (approximately 257 chunks)
 - **5+**: Very far (memory intensive)
+- **10**: Extended range (approximately 4,189 chunks, current setting)
 
 ## Performance Considerations
 
