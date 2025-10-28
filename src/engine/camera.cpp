@@ -136,8 +136,8 @@ void Camera::getProjectionMatrix(float* matrix, float aspectRatio) const {
     
     matrix[0] = 1.0f / (aspectRatio * tanHalfFov);
     matrix[5] = -1.0f / tanHalfFov; // Negative for Vulkan's Y-down
-    matrix[10] = farPlane / (farPlane - nearPlane);
-    matrix[11] = 1.0f;
+    matrix[10] = -farPlane / (farPlane - nearPlane); // Negative for correct Z-depth mapping
+    matrix[11] = -1.0f; // Negative to ensure W_clip = -Z_view (positive for visible points)
     matrix[14] = -(farPlane * nearPlane) / (farPlane - nearPlane);
 }
 
