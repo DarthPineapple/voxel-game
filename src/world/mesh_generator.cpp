@@ -1,5 +1,6 @@
 #include "mesh_generator.h"
 #include <cstring> // for memset
+#include <algorithm> // for std::any_of
 
 void MeshGenerator::generateChunkMesh(const Chunk& chunk, 
                                      std::vector<Vertex>& vertices, 
@@ -9,13 +10,8 @@ void MeshGenerator::generateChunkMesh(const Chunk& chunk,
     
     // Early exit optimization: check if chunk has any solid voxels
     const auto& voxels = chunk.getVoxels();
-    bool hasAnyVoxel = false;
-    for (const auto& voxel : voxels) {
-        if (voxel.getType() != 0) {
-            hasAnyVoxel = true;
-            break;
-        }
-    }
+    bool hasAnyVoxel = std::any_of(voxels.begin(), voxels.end(), 
+                                    [](const Voxel& v) { return v.getType() != 0; });
     
     // Skip meshing entirely if chunk is completely empty
     if (!hasAnyVoxel) {
