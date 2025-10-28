@@ -232,11 +232,12 @@ void Renderer::recordCommandBuffer(size_t imageIndex) {
     // Sort chunks by distance from camera (back-to-front for correct rendering)
     // Each chunk position is in chunk coordinates, so we need to convert to world space
     // by multiplying by CHUNK_SIZE and adding half the chunk size to get the center
-    constexpr float chunkSize = static_cast<float>(CHUNK_SIZE);
-    constexpr float halfChunk = chunkSize / 2.0f;
-    
     std::sort(sortedChunks.begin(), sortedChunks.end(),
         [camX, camY, camZ](const auto& a, const auto& b) {
+            // Use CHUNK_SIZE constant from chunk.h
+            constexpr float chunkSize = static_cast<float>(CHUNK_SIZE);
+            constexpr float halfChunk = chunkSize / 2.0f;
+            
             // Calculate world-space center of each chunk
             const float aCenterX = std::get<0>(a.first) * chunkSize + halfChunk;
             const float aCenterY = std::get<1>(a.first) * chunkSize + halfChunk;
