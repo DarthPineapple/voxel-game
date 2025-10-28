@@ -29,6 +29,22 @@ void Application::init() {
 
     chunkManager = new ChunkManager();
     chunkManager->init();
+    
+    // Position camera above terrain
+    Camera* camera = renderer->getCamera();
+    if (camera) {
+        // Get terrain height at spawn position (0, 0)
+        float spawnX = 0.0f;
+        float spawnZ = 0.0f;
+        float terrainHeight = chunkManager->getTerrainHeightAt(spawnX, spawnZ);
+        
+        // Position camera 5 units above terrain
+        camera->setPosition(spawnX, terrainHeight + 5.0f, spawnZ);
+        
+        std::cout << "Camera spawned at position: (" 
+                  << spawnX << ", " << (terrainHeight + 5.0f) << ", " << spawnZ 
+                  << ") - Terrain height: " << terrainHeight << std::endl;
+    }
 
     isRunning = true;
     lastTime = glfwGetTime();

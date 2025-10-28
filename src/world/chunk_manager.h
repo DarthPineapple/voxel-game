@@ -29,6 +29,9 @@ public:
     
     // Get chunk at position (returns nullptr if not found)
     Chunk* getChunk(int x, int y, int z);
+    
+    // Get terrain height at world position (for camera spawning)
+    float getTerrainHeightAt(float worldX, float worldZ) const;
 
 private:
     std::vector<Chunk*> chunks;
