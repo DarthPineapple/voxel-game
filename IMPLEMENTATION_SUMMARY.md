@@ -71,7 +71,8 @@ This implementation adds a complete camera system with keyboard input to the vox
 - **Default Constructor Position**: (0.0, 0.0, 5.0)
 - **Runtime Initial Position** (set in renderer.cpp): (8.0, 8.0, 20.0)
 - **Movement Speed**: 3.0 units/second
-- **Rotation Speed**: 1.5 radians/second
+- **Rotation Speed**: 1.5 radians/second (base speed, modified by position)
+- **Position-Dependent Rotation**: Rotation speed scales with distance from origin (1.0 + distance * 0.01)
 - **FOV**: 45 degrees
 - **Clipping Planes**: Near=0.1, Far=100.0
 
