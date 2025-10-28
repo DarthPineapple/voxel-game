@@ -107,28 +107,33 @@ void Camera::getViewMatrix(float* matrix) const {
     float upY = cosPitch;
     float upZ = cosYaw * sinPitch;
     
-    // Create view matrix (inverse of camera transform)
+    // Create view matrix by first translating relative to camera position,
+    // then applying pitch and yaw rotations
+    // This is implemented as: View = Rotation * Translation
+    // where Translation moves vertices to camera-relative coordinates
+    // and Rotation applies the camera's orientation
+    
+    // First, create translation matrix to move to camera-relative coordinates
+    // T = translate by -camera_position
+    float translation[16] = {
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        -posX, -posY, -posZ, 1.0f
+    };
+    
+    // Second, create rotation matrix from camera basis vectors
+    // R = rotation based on pitch and yaw
+    float rotation[16] = {
+        rightX, rightY, rightZ, 0.0f,
+        upX, upY, upZ, 0.0f,
+        -forwardX, -forwardY, -forwardZ, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f
+    };
+    
+    // Combine: View = R * T (rotation applied after translation)
     // Column-major order for Vulkan/GLSL
-    // Note: forward vector is negated because camera looks down -Z axis
-    matrix[0] = rightX;
-    matrix[1] = rightY;
-    matrix[2] = rightZ;
-    matrix[3] = 0.0f;
-    
-    matrix[4] = upX;
-    matrix[5] = upY;
-    matrix[6] = upZ;
-    matrix[7] = 0.0f;
-    
-    matrix[8] = -forwardX;
-    matrix[9] = -forwardY;
-    matrix[10] = -forwardZ;
-    matrix[11] = 0.0f;
-    
-    matrix[12] = -(rightX * posX + rightY * posY + rightZ * posZ);
-    matrix[13] = -(upX * posX + upY * posY + upZ * posZ);
-    matrix[14] = (forwardX * posX + forwardY * posY + forwardZ * posZ);
-    matrix[15] = 1.0f;
+    multiplyMatrices(rotation, translation, matrix);
 }
 
 void Camera::getProjectionMatrix(float* matrix, float aspectRatio) const {
