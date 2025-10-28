@@ -108,7 +108,7 @@ void Camera::getViewMatrix(float* matrix) const {
     
     matrix[12] = -(rightX * posX + rightY * posY + rightZ * posZ);
     matrix[13] = -(upX * posX + upY * posY + upZ * posZ);
-    matrix[14] = (forwardX * posX + forwardY * posY + forwardZ * posZ);
+    matrix[14] = -(forwardX * posX + forwardY * posY + forwardZ * posZ);
     matrix[15] = 1.0f;
 }
 
