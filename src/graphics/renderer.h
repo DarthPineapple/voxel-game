@@ -4,6 +4,8 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <cstddef>
+#include <map>
+#include <tuple>
 
 class Window;
 class VulkanInstance;
@@ -18,6 +20,7 @@ class Pipeline;
 class OverlayPipeline;
 class Mesh;
 class Camera;
+class ChunkManager;
 
 class Renderer {
 public:
@@ -29,6 +32,9 @@ public:
     void cleanup();
     
     Camera* getCamera() { return camera; }
+    
+    // Chunk mesh management
+    void updateChunkMeshes(ChunkManager* chunkManager);
     
     // Debug methods
     Mesh* getTestMesh() { return testMesh; }
@@ -50,8 +56,11 @@ private:
     Pipeline* pipeline;
     OverlayPipeline* overlayPipeline;
     
-    // Mesh for rendering
+    // Mesh for rendering (deprecated - for backwards compatibility)
     Mesh* testMesh;
+    
+    // Dynamic chunk meshes
+    std::map<std::tuple<int, int, int>, Mesh*> chunkMeshes;
     
     // Overlay square mesh
     VkBuffer overlayVertexBuffer;
@@ -81,6 +90,9 @@ private:
     void recordCommandBuffer(size_t imageIndex);
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
     void createOverlayVertexBuffer();
+    
+    // Helper to create mesh for a chunk
+    Mesh* createMeshForChunk(class Chunk* chunk);
 };
 
 #endif // RENDERER_H
