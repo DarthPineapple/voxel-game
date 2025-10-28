@@ -1,5 +1,6 @@
 #include "chunk.h"
 #include "noise.h"
+#include "terrain_config.h"
 #include <vector>
 #include <cmath>
 
@@ -40,26 +41,22 @@ const std::vector<Voxel>& Chunk::getVoxels() const {
 
 void Chunk::generateVoxels() {
     // Create noise generator with a fixed seed for consistent terrain
-    static PerlinNoise noise(12345);
-    
-    // Terrain generation parameters
-    const float scale = 0.05f;        // Controls terrain frequency
-    const int octaves = 4;            // Number of noise layers
-    const float persistence = 0.5f;   // Amplitude decay for each octave
-    const float heightMultiplier = 20.0f; // Maximum terrain height variation
-    const int baseHeight = 32;        // Base terrain level
+    static PerlinNoise noise(TerrainConfig::NOISE_SEED);
     
     for (int x = 0; x < CHUNK_SIZE; ++x) {
         for (int z = 0; z < CHUNK_SIZE; ++z) {
             // Calculate world coordinates
-            float worldX = (posX * CHUNK_SIZE + x) * scale;
-            float worldZ = (posZ * CHUNK_SIZE + z) * scale;
+            float worldX = (posX * CHUNK_SIZE + x) * TerrainConfig::SCALE;
+            float worldZ = (posZ * CHUNK_SIZE + z) * TerrainConfig::SCALE;
             
             // Generate height using octave noise
-            float noiseValue = noise.octaveNoise(worldX, worldZ, octaves, persistence);
+            float noiseValue = noise.octaveNoise(worldX, worldZ, 
+                                                  TerrainConfig::OCTAVES, 
+                                                  TerrainConfig::PERSISTENCE);
             
             // Convert noise value from [-1, 1] to terrain height
-            int terrainHeight = baseHeight + static_cast<int>(noiseValue * heightMultiplier);
+            int terrainHeight = TerrainConfig::BASE_HEIGHT + 
+                               static_cast<int>(noiseValue * TerrainConfig::HEIGHT_MULTIPLIER);
             
             // Fill voxels based on height
             for (int y = 0; y < CHUNK_SIZE; ++y) {
