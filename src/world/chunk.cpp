@@ -27,6 +27,7 @@ void Chunk::unload() {
         // Clean up voxel data
         voxels.clear();
         isLoaded = false;
+        meshDirty = false;  // Reset dirty flag when unloading
     }
 }
 
