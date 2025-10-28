@@ -131,7 +131,9 @@ void Camera::getViewMatrix(float* matrix) const {
         0.0f, 0.0f, 0.0f, 1.0f
     };
     
-    // Combine: View = R * T (rotation applied after translation)
+    // Combine: View = R * T
+    // When applied to a vertex: (R * T) * vertex = R * (T * vertex)
+    // This first translates by -camera_position, then applies rotation
     // Column-major order for Vulkan/GLSL
     multiplyMatrices(rotation, translation, matrix);
 }
