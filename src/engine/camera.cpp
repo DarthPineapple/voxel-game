@@ -84,9 +84,9 @@ void Camera::getViewMatrix(float* matrix) const {
     float rightY = 0.0f;
     float rightZ = -sinYaw;
     
-    float upX = -sinYaw * sinPitch;
+    float upX = sinYaw * sinPitch;
     float upY = cosPitch;
-    float upZ = -cosYaw * sinPitch;
+    float upZ = cosYaw * sinPitch;
     
     // Create view matrix (inverse of camera transform)
     // Column-major order for Vulkan/GLSL
