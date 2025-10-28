@@ -19,14 +19,9 @@ Camera::~Camera() {
 }
 
 void Camera::update(float deltaTime) {
-    // Calculate position-dependent rotation modifier
-    // Rotation speed varies based on camera position (height and distance from origin)
-    float distanceFromOrigin = std::sqrt(posX * posX + posY * posY + posZ * posZ);
-    float positionModifier = 1.0f + (distanceFromOrigin * 0.01f); // Scale factor based on distance
-    
-    // Update rotation with position-dependent scaling
-    yaw += inputYaw * rotationSpeed * deltaTime * positionModifier;
-    pitch += inputPitch * rotationSpeed * deltaTime * positionModifier;
+    // Update rotation with constant speed
+    yaw += inputYaw * rotationSpeed * deltaTime;
+    pitch += inputPitch * rotationSpeed * deltaTime;
     
     // Normalize yaw to keep it in range [-PI, PI] for consistency
     // This prevents floating point precision issues and ensures predictable behavior
