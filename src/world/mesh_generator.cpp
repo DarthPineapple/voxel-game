@@ -111,12 +111,13 @@ void MeshGenerator::addFace(std::vector<Vertex>& vertices,
     vertices.push_back(v3);
     vertices.push_back(v4);
     
-    // Two triangles per face
+    // Two triangles per face with clockwise winding (to match pipeline front face expectation)
+    // Pipeline expects VK_FRONT_FACE_CLOCKWISE due to Y-flip in projection matrix
     indices.push_back(baseIndex);
-    indices.push_back(baseIndex + 1);
     indices.push_back(baseIndex + 2);
+    indices.push_back(baseIndex + 1);
     
     indices.push_back(baseIndex);
-    indices.push_back(baseIndex + 2);
     indices.push_back(baseIndex + 3);
+    indices.push_back(baseIndex + 2);
 }
