@@ -93,24 +93,28 @@ void Camera::getViewMatrix(float* matrix) const {
     float sinYaw = std::sin(yaw);
     
     // Camera forward, right, and up vectors
-    // Using yaw-then-pitch rotation order (pitch processed after yaw)
+    // Rotation order: yaw first (around Y-axis), then pitch (around local right axis)
+    // This gives correct FPS-style camera behavior where:
+    // - Right vector remains horizontal (no roll)
+    // - Forward and up tilt with pitch
+    // - All vectors rotate with yaw
     float forwardX = -sinYaw * cosPitch;
     float forwardY = sinPitch;
     float forwardZ = -cosYaw * cosPitch;
     
     float rightX = cosYaw;
-    float rightY = sinYaw * sinPitch;
-    float rightZ = -sinYaw * cosPitch;
+    float rightY = 0.0f;
+    float rightZ = -sinYaw;
     
-    float upX = 0.0f;
+    float upX = sinYaw * sinPitch;
     float upY = cosPitch;
-    float upZ = sinPitch;
+    float upZ = cosYaw * sinPitch;
     
     // Create view matrix by first translating relative to camera position,
-    // then applying yaw and pitch rotations (pitch processed after yaw)
+    // then applying yaw and pitch rotations (pitch applied after yaw)
     // This is implemented as: View = Rotation * Translation
     // where Translation moves vertices to camera-relative coordinates
-    // and Rotation applies the camera's orientation (yaw-then-pitch order)
+    // and Rotation applies the camera's orientation
     
     // First, create translation matrix to move to camera-relative coordinates
     // T = translate by -camera_position
