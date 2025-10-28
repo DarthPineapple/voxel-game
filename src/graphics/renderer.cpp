@@ -242,9 +242,9 @@ void Renderer::recordCommandBuffer(size_t imageIndex) {
     // Bind overlay pipeline
     vkCmdBindPipeline(commandBuffers[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, overlayPipeline->getPipeline());
     
-    // Calculate rotation angle based on time
+    // Calculate rotation angle based on elapsed time (rotates at 1 radian per second)
     float currentTime = static_cast<float>(glfwGetTime() - startTime);
-    float angle = currentTime; // Rotate 1 radian per second
+    float angle = currentTime;
     
     // Push the rotation angle constant
     vkCmdPushConstants(commandBuffers[currentFrame], overlayPipeline->getPipelineLayout(),
