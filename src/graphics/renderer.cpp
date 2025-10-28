@@ -216,22 +216,48 @@ void Renderer::recordCommandBuffer(size_t imageIndex) {
                            pipeline->getPipelineLayout(), 0, 1, &descriptorSets[currentFrame],
                            0, nullptr);
     
-    // Render all chunk meshes in a consistent order
-    // Sort chunks by position to ensure deterministic rendering order
+    // Render all chunk meshes sorted by distance from camera
+    // This ensures correct rendering order, especially at different camera angles
     std::vector<std::pair<std::tuple<int, int, int>, Mesh*>> sortedChunks;
     sortedChunks.reserve(chunkMeshes.size());
     for (const auto& pair : chunkMeshes) {
         sortedChunks.push_back(pair);
     }
     
-    // Sort by Z, then Y, then X for consistent ordering
+    // Get camera position for distance calculation
+    const float camX = camera->getPositionX();
+    const float camY = camera->getPositionY();
+    const float camZ = camera->getPositionZ();
+    
+    // Sort chunks by distance from camera (back-to-front for correct rendering)
+    // Each chunk position is in chunk coordinates, so we need to convert to world space
+    // by multiplying by CHUNK_SIZE and adding half the chunk size to get the center
     std::sort(sortedChunks.begin(), sortedChunks.end(),
-        [](const auto& a, const auto& b) {
-            if (std::get<2>(a.first) != std::get<2>(b.first))
-                return std::get<2>(a.first) < std::get<2>(b.first);
-            if (std::get<1>(a.first) != std::get<1>(b.first))
-                return std::get<1>(a.first) < std::get<1>(b.first);
-            return std::get<0>(a.first) < std::get<0>(b.first);
+        [camX, camY, camZ](const auto& a, const auto& b) {
+            // Use CHUNK_SIZE constant from chunk.h
+            constexpr float chunkSize = static_cast<float>(CHUNK_SIZE);
+            constexpr float halfChunk = chunkSize / 2.0f;
+            
+            // Calculate world-space center of each chunk
+            const float aCenterX = std::get<0>(a.first) * chunkSize + halfChunk;
+            const float aCenterY = std::get<1>(a.first) * chunkSize + halfChunk;
+            const float aCenterZ = std::get<2>(a.first) * chunkSize + halfChunk;
+            
+            const float bCenterX = std::get<0>(b.first) * chunkSize + halfChunk;
+            const float bCenterY = std::get<1>(b.first) * chunkSize + halfChunk;
+            const float bCenterZ = std::get<2>(b.first) * chunkSize + halfChunk;
+            
+            // Calculate squared distance from camera (no need for sqrt since we only compare)
+            const float distA = (aCenterX - camX) * (aCenterX - camX) +
+                               (aCenterY - camY) * (aCenterY - camY) +
+                               (aCenterZ - camZ) * (aCenterZ - camZ);
+            
+            const float distB = (bCenterX - camX) * (bCenterX - camX) +
+                               (bCenterY - camY) * (bCenterY - camY) +
+                               (bCenterZ - camZ) * (bCenterZ - camZ);
+            
+            // Sort back-to-front (farther chunks first)
+            return distA > distB;
         });
     
     for (const auto& pair : sortedChunks) {
