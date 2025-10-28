@@ -81,35 +81,18 @@ void Camera::setRotation(float yawAngle, float pitchAngle) {
 }
 
 void Camera::getViewMatrix(float* matrix) const {
-    // Calculate camera direction
+    // Calculate trigonometric values for yaw and pitch
     float cosPitch = std::cos(pitch);
     float sinPitch = std::sin(pitch);
     float cosYaw = std::cos(yaw);
     float sinYaw = std::sin(yaw);
     
-    // Camera forward, right, and up vectors
-    // Rotation order: yaw first (around Y-axis), then pitch (around local right axis)
-    // This gives correct FPS-style camera behavior where:
-    // - Right vector remains horizontal (no roll)
-    // - Forward and up tilt with pitch
-    // - All vectors rotate with yaw
-    float forwardX = -sinYaw * cosPitch;
-    float forwardY = sinPitch;
-    float forwardZ = -cosYaw * cosPitch;
-    
-    float rightX = cosYaw;
-    float rightY = 0.0f;
-    float rightZ = -sinYaw;
-    
-    float upX = sinYaw * sinPitch;
-    float upY = cosPitch;
-    float upZ = cosYaw * sinPitch;
-    
-    // Create view matrix by first translating relative to camera position,
-    // then applying yaw and pitch rotations (pitch applied after yaw)
-    // This is implemented as: View = Rotation * Translation
-    // where Translation moves vertices to camera-relative coordinates
-    // and Rotation applies the camera's orientation
+    // Create view matrix by applying transformations in order:
+    // 1. Translation to camera-relative coordinates
+    // 2. Yaw rotation (around Y-axis)
+    // 3. Pitch rotation (around X-axis, applied after yaw)
+    // This ensures proper camera perspective control regardless of camera position
+    // Result: View = Pitch * Yaw * Translation
     
     // First, create translation matrix to move to camera-relative coordinates
     // T = translate by -camera_position
@@ -120,20 +103,34 @@ void Camera::getViewMatrix(float* matrix) const {
         -posX, -posY, -posZ, 1.0f
     };
     
-    // Second, create rotation matrix from camera basis vectors
-    // R = rotation based on pitch and yaw
-    float rotation[16] = {
-        rightX, rightY, rightZ, 0.0f,
-        upX, upY, upZ, 0.0f,
-        -forwardX, -forwardY, -forwardZ, 0.0f,
+    // Second, create yaw rotation matrix (rotation around Y-axis)
+    // Ry rotates in the horizontal plane
+    float yawRotation[16] = {
+        cosYaw, 0.0f, sinYaw, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        -sinYaw, 0.0f, cosYaw, 0.0f,
         0.0f, 0.0f, 0.0f, 1.0f
     };
     
-    // Combine: View = R * T
-    // When applied to a vertex: (R * T) * vertex = R * (T * vertex)
-    // This first translates by -camera_position, then applies rotation
+    // Third, create pitch rotation matrix (rotation around X-axis)
+    // Rx tilts the view up and down
+    float pitchRotation[16] = {
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, cosPitch, -sinPitch, 0.0f,
+        0.0f, sinPitch, cosPitch, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f
+    };
+    
+    // Combine transformations: View = Rx * Ry * T
+    // First apply yaw to the translation
+    float temp[16];
+    multiplyMatrices(yawRotation, translation, temp);
+    
+    // Then apply pitch to the result
+    // When applied to a vertex: (Rx * Ry * T) * v = Rx * (Ry * (T * v))
+    // This first translates, then applies yaw, then applies pitch
     // Column-major order for Vulkan/GLSL
-    multiplyMatrices(rotation, translation, matrix);
+    multiplyMatrices(pitchRotation, temp, matrix);
 }
 
 void Camera::getProjectionMatrix(float* matrix, float aspectRatio) const {
