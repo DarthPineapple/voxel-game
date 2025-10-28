@@ -187,8 +187,8 @@ void Application::processInput(float deltaTime) {
     float yaw = 0.0f;
     float pitch = 0.0f;
     
-    if (window->isKeyPressed(GLFW_KEY_LEFT)) yaw -= 1.0f;
-    if (window->isKeyPressed(GLFW_KEY_RIGHT)) yaw += 1.0f;
+    if (window->isKeyPressed(GLFW_KEY_LEFT)) yaw += 1.0f;
+    if (window->isKeyPressed(GLFW_KEY_RIGHT)) yaw -= 1.0f;
     if (window->isKeyPressed(GLFW_KEY_UP)) pitch += 1.0f;
     if (window->isKeyPressed(GLFW_KEY_DOWN)) pitch -= 1.0f;
     camera->setRotationInput(pitch, yaw);
