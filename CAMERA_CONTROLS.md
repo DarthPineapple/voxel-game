@@ -1,16 +1,16 @@
 # Camera Controls
 
-The voxel game now supports camera movement and rotation using keyboard input with full 3D flight controls.
+The voxel game now supports camera movement and rotation using keyboard input with FPS-style controls.
 
 ## Controls
 
 ### Movement
-- **W** - Move forward (in the direction you're looking, including vertical component)
-- **S** - Move backward (opposite to where you're looking)
-- **A** - Strafe left (perpendicular to view direction)
-- **D** - Strafe right (perpendicular to view direction)
-- **Space** - Move up (relative to current orientation)
-- **Left Shift** - Move down (relative to current orientation)
+- **W** - Move forward on the horizontal plane (direction based on yaw rotation)
+- **S** - Move backward on the horizontal plane (opposite to yaw direction)
+- **A** - Strafe left (perpendicular to yaw direction)
+- **D** - Strafe right (perpendicular to yaw direction)
+- **Space** - Move straight up in world space
+- **Left Shift** - Move straight down in world space
 
 ### Rotation
 - **Left Arrow** - Rotate left (yaw)
@@ -20,13 +20,12 @@ The voxel game now supports camera movement and rotation using keyboard input wi
 
 ## Movement System
 
-The camera uses a **full 3D flight control system** where movement is dependent on your current view direction:
+The camera uses an **FPS-style control system** where horizontal movement is based on yaw rotation only:
 
-- **Forward/Backward movement** follows your exact view direction, including both horizontal (yaw) and vertical (pitch) components
-- When looking up and moving forward, you will move upward and forward
-- When looking down and moving forward, you will move downward and forward
-- **Strafe movement** (left/right) is always perpendicular to your view direction but remains horizontal
-- **Up/Down movement** (Space/Shift) is relative to your current camera orientation
+- **Forward/Backward movement** (W/S) moves on the horizontal plane in the direction of your yaw rotation, independent of pitch
+- Looking up or down does NOT affect horizontal movement direction - you always move parallel to the ground
+- **Strafe movement** (A/D) is always perpendicular to your yaw direction and remains horizontal
+- **Up/Down movement** (Space/Shift) moves straight up or down in world space coordinates
 
 ## Camera Settings
 
