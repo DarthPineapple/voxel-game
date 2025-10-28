@@ -39,7 +39,6 @@ public:
     void updateChunkMeshes(ChunkManager* chunkManager);
     
     // Debug methods
-    Mesh* getTestMesh() { return testMesh; }
     void logMeshInfo() const;
     void logTransformedMeshInfo() const;
 
@@ -57,9 +56,6 @@ private:
     SyncObjects* syncObjects;
     Pipeline* pipeline;
     OverlayPipeline* overlayPipeline;
-    
-    // Mesh for rendering (deprecated - for backwards compatibility)
-    Mesh* testMesh;
     
     // Dynamic chunk meshes
     std::unordered_map<std::tuple<int, int, int>, Mesh*, TupleHash> chunkMeshes;
