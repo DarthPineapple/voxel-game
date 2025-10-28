@@ -7,6 +7,11 @@ void MeshGenerator::generateChunkMesh(const Chunk& chunk,
     indices.clear();
 
     const std::vector<Voxel>& voxels = chunk.getVoxels();
+    
+    // Get chunk world position offset
+    int chunkOffsetX = chunk.getPosX() * CHUNK_SIZE;
+    int chunkOffsetY = chunk.getPosY() * CHUNK_SIZE;
+    int chunkOffsetZ = chunk.getPosZ() * CHUNK_SIZE;
 
     // Note: Index calculation must match chunk voxel storage order
     for (int x = 0; x < CHUNK_SIZE; x++) {
@@ -19,27 +24,27 @@ void MeshGenerator::generateChunkMesh(const Chunk& chunk,
                 // Check each face and add geometry if exposed
                 // Face 0: +X (right)
                 if (x == CHUNK_SIZE - 1 || !isVoxelSolid(chunk, x + 1, y, z)) {
-                    addFace(vertices, indices, x, y, z, 0);
+                    addFace(vertices, indices, x, y, z, 0, chunkOffsetX, chunkOffsetY, chunkOffsetZ);
                 }
                 // Face 1: -X (left)
                 if (x == 0 || !isVoxelSolid(chunk, x - 1, y, z)) {
-                    addFace(vertices, indices, x, y, z, 1);
+                    addFace(vertices, indices, x, y, z, 1, chunkOffsetX, chunkOffsetY, chunkOffsetZ);
                 }
                 // Face 2: +Y (top)
                 if (y == CHUNK_SIZE - 1 || !isVoxelSolid(chunk, x, y + 1, z)) {
-                    addFace(vertices, indices, x, y, z, 2);
+                    addFace(vertices, indices, x, y, z, 2, chunkOffsetX, chunkOffsetY, chunkOffsetZ);
                 }
                 // Face 3: -Y (bottom)
                 if (y == 0 || !isVoxelSolid(chunk, x, y - 1, z)) {
-                    addFace(vertices, indices, x, y, z, 3);
+                    addFace(vertices, indices, x, y, z, 3, chunkOffsetX, chunkOffsetY, chunkOffsetZ);
                 }
                 // Face 4: +Z (front)
                 if (z == CHUNK_SIZE - 1 || !isVoxelSolid(chunk, x, y, z + 1)) {
-                    addFace(vertices, indices, x, y, z, 4);
+                    addFace(vertices, indices, x, y, z, 4, chunkOffsetX, chunkOffsetY, chunkOffsetZ);
                 }
                 // Face 5: -Z (back)
                 if (z == 0 || !isVoxelSolid(chunk, x, y, z - 1)) {
-                    addFace(vertices, indices, x, y, z, 5);
+                    addFace(vertices, indices, x, y, z, 5, chunkOffsetX, chunkOffsetY, chunkOffsetZ);
                 }
             }
         }
@@ -58,12 +63,14 @@ bool MeshGenerator::isVoxelSolid(const Chunk& chunk, int x, int y, int z) {
 
 void MeshGenerator::addFace(std::vector<Vertex>& vertices, 
                            std::vector<uint32_t>& indices,
-                           int x, int y, int z, int face) {
+                           int x, int y, int z, int face,
+                           int chunkOffsetX, int chunkOffsetY, int chunkOffsetZ) {
     uint32_t baseIndex = static_cast<uint32_t>(vertices.size());
     
-    float fx = static_cast<float>(x);
-    float fy = static_cast<float>(y);
-    float fz = static_cast<float>(z);
+    // Apply chunk offset to get world coordinates
+    float fx = static_cast<float>(x + chunkOffsetX);
+    float fy = static_cast<float>(y + chunkOffsetY);
+    float fz = static_cast<float>(z + chunkOffsetZ);
     
     Vertex v1, v2, v3, v4;
     
