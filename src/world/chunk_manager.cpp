@@ -1,5 +1,7 @@
 #include "chunk_manager.h"
 #include "chunk.h"
+#include "noise.h"
+#include "terrain_config.h"
 #include <vector>
 #include <unordered_map>
 #include <tuple>
@@ -119,4 +121,21 @@ void ChunkManager::updateChunksAroundCamera(float camX, float camY, float camZ, 
     for (const auto& chunkPos : chunksToUnload) {
         removeChunk(std::get<0>(chunkPos), std::get<1>(chunkPos), std::get<2>(chunkPos));
     }
+}
+
+float ChunkManager::getTerrainHeightAt(float worldX, float worldZ) const {
+    // Use the same noise generator and parameters as chunk generation
+    static PerlinNoise noise(TerrainConfig::NOISE_SEED);
+    
+    // Generate height using octave noise
+    float noiseValue = noise.octaveNoise(worldX * TerrainConfig::SCALE, 
+                                         worldZ * TerrainConfig::SCALE, 
+                                         TerrainConfig::OCTAVES, 
+                                         TerrainConfig::PERSISTENCE);
+    
+    // Convert noise value to terrain height
+    float terrainHeight = TerrainConfig::BASE_HEIGHT + 
+                         noiseValue * TerrainConfig::HEIGHT_MULTIPLIER;
+    
+    return terrainHeight;
 }
