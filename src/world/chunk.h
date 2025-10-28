@@ -20,11 +20,17 @@ public:
     int getPosZ() const { return posZ; }
 
     const std::vector<Voxel>& getVoxels() const;
+    
+    // Mesh management
+    bool needsMeshRebuild() const { return meshDirty; }
+    void markMeshDirty() { meshDirty = true; }
+    void markMeshClean() { meshDirty = false; }
 
 private:
     int posX, posY, posZ;
     std::vector<Voxel> voxels;
     bool isLoaded;
+    bool meshDirty;
     
     void generateVoxels();
 };

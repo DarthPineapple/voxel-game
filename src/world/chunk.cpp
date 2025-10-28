@@ -4,7 +4,7 @@
 #include <vector>
 #include <cmath>
 
-Chunk::Chunk(int x, int y, int z) : posX(x), posY(y), posZ(z), isLoaded(false) {
+Chunk::Chunk(int x, int y, int z) : posX(x), posY(y), posZ(z), isLoaded(false), meshDirty(false) {
     // Initialize voxel data
     voxels.resize(CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE);
 }
@@ -18,6 +18,7 @@ void Chunk::load() {
         // Load voxel data from disk or generate procedurally
         generateVoxels();
         isLoaded = true;
+        meshDirty = true;  // Mark mesh as needing rebuild after loading
     }
 }
 
@@ -26,6 +27,7 @@ void Chunk::unload() {
         // Clean up voxel data
         voxels.clear();
         isLoaded = false;
+        meshDirty = false;  // Reset dirty flag when unloading
     }
 }
 
