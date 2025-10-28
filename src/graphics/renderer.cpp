@@ -183,6 +183,9 @@ void Renderer::render() {
 void Renderer::recordCommandBuffer(size_t imageIndex) {
     const auto& commandBuffers = commandPool->getCommandBuffers();
     
+    // Explicitly reset the command buffer before recording
+    vkResetCommandBuffer(commandBuffers[currentFrame], 0);
+    
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     
