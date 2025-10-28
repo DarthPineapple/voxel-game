@@ -19,9 +19,9 @@ The voxel game now features dynamic chunk generation, loading, and meshing aroun
 The world is divided into chunks, where each chunk is 16x16x16 voxels. The camera position is converted to chunk coordinates:
 
 ```cpp
-int chunkX = floor(cameraX / 16)
-int chunkY = floor(cameraY / 16)
-int chunkZ = floor(cameraZ / 16)
+int chunkX = std::floor(cameraX / 16)
+int chunkY = std::floor(cameraY / 16)
+int chunkZ = std::floor(cameraZ / 16)
 ```
 
 ### Render Distance
@@ -113,7 +113,7 @@ class ChunkManager {
 ```
 
 Key features:
-- Fast O(1) chunk lookup using `std::map`
+- Fast O(1) chunk lookup using `std::unordered_map`
 - Duplicate prevention
 - Automatic cleanup
 

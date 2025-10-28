@@ -19,7 +19,7 @@
 #include <stdexcept>
 #include <cstring>
 #include <algorithm>
-#include <map>
+#include <unordered_map>
 #include <tuple>
 #include <GLFW/glfw3.h>
 
@@ -713,7 +713,7 @@ void Renderer::updateChunkMeshes(ChunkManager* chunkManager) {
     const auto& chunks = chunkManager->getChunks();
     
     // Track which chunks should have meshes
-    std::map<std::tuple<int, int, int>, bool> activeChunks;
+    std::unordered_map<std::tuple<int, int, int>, bool, TupleHash> activeChunks;
     
     // Create meshes for new chunks
     for (Chunk* chunk : chunks) {

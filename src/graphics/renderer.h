@@ -4,9 +4,10 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <cstddef>
-#include <map>
+#include <unordered_map>
 #include <tuple>
 
+// Forward declarations
 class Window;
 class VulkanInstance;
 class Device;
@@ -21,6 +22,16 @@ class OverlayPipeline;
 class Mesh;
 class Camera;
 class ChunkManager;
+
+// Hash function for std::tuple<int, int, int>
+struct TupleHash {
+    std::size_t operator()(const std::tuple<int, int, int>& t) const {
+        auto h1 = std::hash<int>{}(std::get<0>(t));
+        auto h2 = std::hash<int>{}(std::get<1>(t));
+        auto h3 = std::hash<int>{}(std::get<2>(t));
+        return h1 ^ (h2 << 1) ^ (h3 << 2);
+    }
+};
 
 class Renderer {
 public:
@@ -60,7 +71,7 @@ private:
     Mesh* testMesh;
     
     // Dynamic chunk meshes
-    std::map<std::tuple<int, int, int>, Mesh*> chunkMeshes;
+    std::unordered_map<std::tuple<int, int, int>, Mesh*, TupleHash> chunkMeshes;
     
     // Overlay square mesh
     VkBuffer overlayVertexBuffer;
