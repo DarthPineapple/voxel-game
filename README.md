@@ -17,14 +17,17 @@ This project is an efficient block-based voxel game that utilizes cubic chunks a
 - ✅ **Camera system with MVP matrices**
 - ✅ **Keyboard input for camera movement and rotation**
 - ✅ **Dynamic chunk generation, loading, and meshing around camera**
+- ✅ **Extended render distance (10 chunk radius)**
+- ✅ **Elevation-based shading for visual depth**
 - macOS (MoltenVK) portability enumeration and subset extension handling are in place.
 
 ## Features
 - Block-based voxel world
 - Cubic chunk management (16x16x16 voxels per chunk)
 - **Dynamic chunk loading and unloading based on camera position**
-- **Spherical render distance with configurable range**
+- **Spherical render distance with configurable range (currently 10 chunks)**
 - **Automatic mesh generation and GPU buffer management**
+- **Elevation-based shading with gradient coloring**
 - Vulkan graphics rendering
 - Greedy meshing algorithm for optimized polygon count
 
@@ -78,11 +81,13 @@ The application will:
 2. Dynamically generate and load voxel chunks around the camera
 3. Create mesh geometry using greedy meshing and face culling optimization
 4. Upload vertex and index buffers to GPU for each chunk
-5. Render all loaded chunks with simple directional lighting
+5. Render all loaded chunks with simple directional lighting and elevation-based shading
 6. Allow camera movement with WASD keys and rotation with arrow keys
 7. Automatically load new chunks and unload distant chunks as you move
 
 For dynamic chunk loading details, see [DYNAMIC_CHUNK_LOADING.md](DYNAMIC_CHUNK_LOADING.md).
+
+For elevation-based shading details, see [ELEVATION_SHADING.md](ELEVATION_SHADING.md).
 
 For camera controls, see [CAMERA_CONTROLS.md](CAMERA_CONTROLS.md).
 For debug mode and frame-by-frame analysis, see [DEBUG_MODE.md](DEBUG_MODE.md).
@@ -125,6 +130,8 @@ To add new textures or shaders, place them in the `assets/textures` or `assets/s
 - ✅ **Camera system and MVP matrices**
 - ✅ **Keyboard input for camera control**
 - ✅ **Dynamic chunk loading and meshing around camera**
+- ✅ **Extended render distance (10 chunk radius)**
+- ✅ **Elevation-based shading**
 - 🔄 Texture atlas support
 - 🔄 Frustum culling optimization
 - 🔄 Chunk persistence (save/load to disk)
