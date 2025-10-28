@@ -23,6 +23,11 @@ void Camera::update(float deltaTime) {
     yaw += inputYaw * rotationSpeed * deltaTime;
     pitch += inputPitch * rotationSpeed * deltaTime;
     
+    // Normalize yaw to keep it in range [-PI, PI] for consistency
+    // This prevents floating point precision issues and ensures predictable behavior
+    while (yaw > M_PI) yaw -= 2.0f * M_PI;
+    while (yaw < -M_PI) yaw += 2.0f * M_PI;
+    
     // Clamp pitch to avoid gimbal lock
     const float maxPitch = M_PI * 0.49f; // Just under 90 degrees
     if (pitch > maxPitch) pitch = maxPitch;

@@ -46,6 +46,8 @@ The camera system uses:
 - **MVP Matrix**: Model-View-Projection matrix calculated per frame
 - **Uniform Buffers**: GPU buffers to pass the MVP matrix to shaders
 - **Descriptor Sets**: Vulkan descriptor sets to bind uniform buffers to shaders
+- **Yaw Normalization**: Yaw angle is normalized to [-π, π] range to prevent floating-point precision issues and ensure consistent rotation behavior
+- **Pitch Clamping**: Pitch angle is clamped to approximately ±88 degrees to prevent gimbal lock
 
 The vertex shader (`assets/shaders/shader.vert`) now receives the MVP matrix through a uniform buffer binding and applies it to transform vertices from world space to clip space.
 
