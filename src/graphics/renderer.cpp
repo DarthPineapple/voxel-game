@@ -13,11 +13,14 @@
 #include "vulkan/overlay_pipeline.h"
 #include "mesh.h"
 #include "world/chunk.h"
+#include "world/chunk_manager.h"
 #include "world/mesh_generator.h"
 #include <iostream>
 #include <stdexcept>
 #include <cstring>
 #include <algorithm>
+#include <unordered_map>
+#include <tuple>
 #include <GLFW/glfw3.h>
 
 Renderer::Renderer()
@@ -227,16 +230,35 @@ void Renderer::recordCommandBuffer(size_t imageIndex) {
                            pipeline->getPipelineLayout(), 0, 1, &descriptorSets[currentFrame],
                            0, nullptr);
     
-    // Bind vertex buffer
-    VkBuffer vertexBuffers[] = {testMesh->getVertexBuffer()};
-    VkDeviceSize offsets[] = {0};
-    vkCmdBindVertexBuffers(commandBuffers[currentFrame], 0, 1, vertexBuffers, offsets);
-    
-    // Bind index buffer
-    vkCmdBindIndexBuffer(commandBuffers[currentFrame], testMesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
-    
-    // Draw the mesh
-    vkCmdDrawIndexed(commandBuffers[currentFrame], testMesh->getIndexCount(), 1, 0, 0, 0);
+    // Render all chunk meshes
+    if (!chunkMeshes.empty()) {
+        for (const auto& pair : chunkMeshes) {
+            Mesh* mesh = pair.second;
+            if (mesh && mesh->getIndexCount() > 0) {
+                // Bind vertex buffer
+                VkBuffer vertexBuffers[] = {mesh->getVertexBuffer()};
+                VkDeviceSize offsets[] = {0};
+                vkCmdBindVertexBuffers(commandBuffers[currentFrame], 0, 1, vertexBuffers, offsets);
+                
+                // Bind index buffer
+                vkCmdBindIndexBuffer(commandBuffers[currentFrame], mesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
+                
+                // Draw the mesh
+                vkCmdDrawIndexed(commandBuffers[currentFrame], mesh->getIndexCount(), 1, 0, 0, 0);
+            }
+        }
+    } else if (testMesh) {
+        // Fallback to test mesh for backward compatibility
+        VkBuffer vertexBuffers[] = {testMesh->getVertexBuffer()};
+        VkDeviceSize offsets[] = {0};
+        vkCmdBindVertexBuffers(commandBuffers[currentFrame], 0, 1, vertexBuffers, offsets);
+        
+        // Bind index buffer
+        vkCmdBindIndexBuffer(commandBuffers[currentFrame], testMesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
+        
+        // Draw the mesh
+        vkCmdDrawIndexed(commandBuffers[currentFrame], testMesh->getIndexCount(), 1, 0, 0, 0);
+    }
     
     // Overlay disabled for now
     // TODO: Re-enable overlay rendering when needed
@@ -319,6 +341,15 @@ void Renderer::cleanup() {
         delete testMesh;
         testMesh = nullptr;
     }
+    
+    // Clean up all chunk meshes
+    for (auto& pair : chunkMeshes) {
+        if (pair.second) {
+            pair.second->cleanup();
+            delete pair.second;
+        }
+    }
+    chunkMeshes.clear();
     
     if (overlayPipeline) {
         overlayPipeline->cleanup();
@@ -655,4 +686,65 @@ void Renderer::createOverlayVertexBuffer() {
     vkMapMemory(device->getDevice(), overlayVertexBufferMemory, 0, bufferSize, 0, &data);
     std::memcpy(data, vertices, (size_t)bufferSize);
     vkUnmapMemory(device->getDevice(), overlayVertexBufferMemory);
+}
+
+Mesh* Renderer::createMeshForChunk(Chunk* chunk) {
+    if (!chunk) return nullptr;
+    
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices;
+    MeshGenerator::generateChunkMesh(*chunk, vertices, indices);
+    
+    // Only create mesh if there are vertices
+    if (vertices.empty() || indices.empty()) {
+        return nullptr;
+    }
+    
+    Mesh* mesh = new Mesh(device->getDevice(), device->getPhysicalDevice());
+    mesh->createVertexBuffer(vertices);
+    mesh->createIndexBuffer(indices);
+    
+    return mesh;
+}
+
+void Renderer::updateChunkMeshes(ChunkManager* chunkManager) {
+    if (!chunkManager) return;
+    
+    const auto& chunks = chunkManager->getChunks();
+    
+    // Track which chunks should have meshes
+    std::unordered_map<std::tuple<int, int, int>, bool, TupleHash> activeChunks;
+    
+    // Create meshes for new chunks
+    for (Chunk* chunk : chunks) {
+        auto key = std::make_tuple(chunk->getPosX(), chunk->getPosY(), chunk->getPosZ());
+        activeChunks[key] = true;
+        
+        // Create mesh if it doesn't exist
+        if (chunkMeshes.find(key) == chunkMeshes.end()) {
+            Mesh* mesh = createMeshForChunk(chunk);
+            if (mesh) {
+                chunkMeshes[key] = mesh;
+            }
+        }
+    }
+    
+    // Remove meshes for chunks that no longer exist
+    std::vector<std::tuple<int, int, int>> meshesToRemove;
+    for (const auto& pair : chunkMeshes) {
+        if (activeChunks.find(pair.first) == activeChunks.end()) {
+            meshesToRemove.push_back(pair.first);
+        }
+    }
+    
+    for (const auto& key : meshesToRemove) {
+        auto it = chunkMeshes.find(key);
+        if (it != chunkMeshes.end()) {
+            if (it->second) {
+                it->second->cleanup();
+                delete it->second;
+            }
+            chunkMeshes.erase(it);
+        }
+    }
 }

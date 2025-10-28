@@ -56,9 +56,21 @@ void Application::run() {
         Camera* camera = renderer->getCamera();
         if (camera) {
             camera->update(deltaTime);
+            
+            // Update chunks around camera position with render distance of 2 chunks
+            chunkManager->updateChunksAroundCamera(
+                camera->getPosX(), 
+                camera->getPosY(), 
+                camera->getPosZ(), 
+                2  // render distance in chunks
+            );
         }
         
         chunkManager->update();
+        
+        // Update chunk meshes in the renderer
+        renderer->updateChunkMeshes(chunkManager);
+        
         renderer->render();
 
         // Frame logger: output render time, camera pitch/yaw, and position
