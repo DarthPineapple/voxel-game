@@ -73,12 +73,12 @@ void Application::run() {
         if (camera) {
             camera->update(deltaTime);
             
-            // Update chunks around camera position with render distance of 2 chunks
+            // Update chunks around camera position with render distance of 10 chunks
             chunkManager->updateChunksAroundCamera(
                 camera->getPosX(), 
                 camera->getPosY(), 
                 camera->getPosZ(), 
-                2  // render distance in chunks
+                10  // render distance in chunks
             );
         }
         

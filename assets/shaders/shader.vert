@@ -13,9 +13,11 @@ layout(binding = 0) uniform UniformBufferObject {
 // Output to fragment shader
 layout(location = 0) out vec3 fragNormal;
 layout(location = 1) out vec2 fragTexCoord;
+layout(location = 2) out float fragWorldY;
 
 void main() {
     gl_Position = ubo.mvp * vec4(inPosition, 1.0);
     fragNormal = inNormal;
     fragTexCoord = inTexCoord;
+    fragWorldY = inPosition.y;
 }
