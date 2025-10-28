@@ -1,11 +1,22 @@
 #include "mesh_generator.h"
 #include <cstring> // for memset
+#include <algorithm> // for std::any_of
 
 void MeshGenerator::generateChunkMesh(const Chunk& chunk, 
                                      std::vector<Vertex>& vertices, 
                                      std::vector<uint32_t>& indices) {
     vertices.clear();
     indices.clear();
+    
+    // Early exit optimization: check if chunk has any solid voxels
+    const auto& voxels = chunk.getVoxels();
+    bool hasAnyVoxel = std::any_of(voxels.begin(), voxels.end(), 
+                                    [](const Voxel& v) { return v.getType() != 0; });
+    
+    // Skip meshing entirely if chunk is completely empty
+    if (!hasAnyVoxel) {
+        return;
+    }
     
     // Get chunk world position offset
     int chunkOffsetX = chunk.getPosX() * CHUNK_SIZE;
@@ -75,7 +86,7 @@ void MeshGenerator::greedyMeshAxis(const Chunk& chunk,
                 
                 int x2[3] = {x[0], x[1], x[2]};
                 x2[axis]++;
-                uint8_t voxelType2 = (x[axis] < CHUNK_SIZE - 1) ? getVoxelType(chunk, x2[0], x2[1], x2[2]) : 0;
+                uint8_t voxelType2 = (x2[axis] < CHUNK_SIZE) ? getVoxelType(chunk, x2[0], x2[1], x2[2]) : 0;
                 
                 // If the voxels are different, we have an exposed face
                 // We store the type of the solid voxel in the mask
@@ -178,10 +189,10 @@ void MeshGenerator::addQuad(std::vector<Vertex>& vertices,
         // u = 1 (Y), v = 2 (Z)
         // width extends in Y direction, height in Z direction
         if (!backFace) { // +X face (right)
-            v1 = {{fx + 1, fy, fz}, {1, 0, 0}, {0, 0}};
-            v2 = {{fx + 1, fy + width, fz}, {1, 0, 0}, {static_cast<float>(width), 0}};
-            v3 = {{fx + 1, fy + width, fz + height}, {1, 0, 0}, {static_cast<float>(width), static_cast<float>(height)}};
-            v4 = {{fx + 1, fy, fz + height}, {1, 0, 0}, {0, static_cast<float>(height)}};
+            v1 = {{fx, fy, fz}, {1, 0, 0}, {0, 0}};
+            v2 = {{fx, fy + width, fz}, {1, 0, 0}, {static_cast<float>(width), 0}};
+            v3 = {{fx, fy + width, fz + height}, {1, 0, 0}, {static_cast<float>(width), static_cast<float>(height)}};
+            v4 = {{fx, fy, fz + height}, {1, 0, 0}, {0, static_cast<float>(height)}};
         } else { // -X face (left)
             v1 = {{fx, fy, fz + height}, {-1, 0, 0}, {0, 0}};
             v2 = {{fx, fy + width, fz + height}, {-1, 0, 0}, {static_cast<float>(width), 0}};
@@ -192,10 +203,10 @@ void MeshGenerator::addQuad(std::vector<Vertex>& vertices,
         // u = 2 (Z), v = 0 (X)
         // width extends in Z direction, height in X direction
         if (!backFace) { // +Y face (top)
-            v1 = {{fx, fy + 1, fz}, {0, 1, 0}, {0, 0}};
-            v2 = {{fx, fy + 1, fz + width}, {0, 1, 0}, {static_cast<float>(width), 0}};
-            v3 = {{fx + height, fy + 1, fz + width}, {0, 1, 0}, {static_cast<float>(width), static_cast<float>(height)}};
-            v4 = {{fx + height, fy + 1, fz}, {0, 1, 0}, {0, static_cast<float>(height)}};
+            v1 = {{fx, fy, fz}, {0, 1, 0}, {0, 0}};
+            v2 = {{fx, fy, fz + width}, {0, 1, 0}, {static_cast<float>(width), 0}};
+            v3 = {{fx + height, fy, fz + width}, {0, 1, 0}, {static_cast<float>(width), static_cast<float>(height)}};
+            v4 = {{fx + height, fy, fz}, {0, 1, 0}, {0, static_cast<float>(height)}};
         } else { // -Y face (bottom)
             v1 = {{fx, fy, fz + width}, {0, -1, 0}, {0, 0}};
             v2 = {{fx, fy, fz}, {0, -1, 0}, {static_cast<float>(width), 0}};
@@ -206,10 +217,10 @@ void MeshGenerator::addQuad(std::vector<Vertex>& vertices,
         // u = 0 (X), v = 1 (Y)
         // width extends in X direction, height in Y direction
         if (!backFace) { // +Z face (front)
-            v1 = {{fx, fy, fz + 1}, {0, 0, 1}, {0, 0}};
-            v2 = {{fx + width, fy, fz + 1}, {0, 0, 1}, {static_cast<float>(width), 0}};
-            v3 = {{fx + width, fy + height, fz + 1}, {0, 0, 1}, {static_cast<float>(width), static_cast<float>(height)}};
-            v4 = {{fx, fy + height, fz + 1}, {0, 0, 1}, {0, static_cast<float>(height)}};
+            v1 = {{fx, fy, fz}, {0, 0, 1}, {0, 0}};
+            v2 = {{fx + width, fy, fz}, {0, 0, 1}, {static_cast<float>(width), 0}};
+            v3 = {{fx + width, fy + height, fz}, {0, 0, 1}, {static_cast<float>(width), static_cast<float>(height)}};
+            v4 = {{fx, fy + height, fz}, {0, 0, 1}, {0, static_cast<float>(height)}};
         } else { // -Z face (back)
             v1 = {{fx + width, fy, fz}, {0, 0, -1}, {0, 0}};
             v2 = {{fx, fy, fz}, {0, 0, -1}, {static_cast<float>(width), 0}};
