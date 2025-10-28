@@ -238,25 +238,27 @@ void Renderer::recordCommandBuffer(size_t imageIndex) {
     // Draw the mesh
     vkCmdDrawIndexed(commandBuffers[currentFrame], testMesh->getIndexCount(), 1, 0, 0, 0);
     
-    // Draw overlay square
-    // Bind overlay pipeline
-    vkCmdBindPipeline(commandBuffers[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, overlayPipeline->getPipeline());
-    
-    // Calculate rotation angle based on elapsed time (rotates at 1 radian per second)
-    float currentTime = static_cast<float>(glfwGetTime() - startTime);
-    float angle = currentTime;
-    
-    // Push the rotation angle constant
-    vkCmdPushConstants(commandBuffers[currentFrame], overlayPipeline->getPipelineLayout(),
-                      VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(float), &angle);
-    
-    // Bind overlay vertex buffer
-    VkBuffer overlayBuffers[] = {overlayVertexBuffer};
-    VkDeviceSize overlayOffsets[] = {0};
-    vkCmdBindVertexBuffers(commandBuffers[currentFrame], 0, 1, overlayBuffers, overlayOffsets);
-    
-    // Draw the overlay square (2 triangles = 6 vertices)
-    vkCmdDraw(commandBuffers[currentFrame], 6, 1, 0, 0);
+    // Overlay disabled for now
+    // TODO: Re-enable overlay rendering when needed
+    // // Draw overlay square
+    // // Bind overlay pipeline
+    // vkCmdBindPipeline(commandBuffers[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, overlayPipeline->getPipeline());
+    // 
+    // // Calculate rotation angle based on elapsed time (rotates at 1 radian per second)
+    // float currentTime = static_cast<float>(glfwGetTime() - startTime);
+    // float angle = currentTime;
+    // 
+    // // Push the rotation angle constant
+    // vkCmdPushConstants(commandBuffers[currentFrame], overlayPipeline->getPipelineLayout(),
+    //                   VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(float), &angle);
+    // 
+    // // Bind overlay vertex buffer
+    // VkBuffer overlayBuffers[] = {overlayVertexBuffer};
+    // VkDeviceSize overlayOffsets[] = {0};
+    // vkCmdBindVertexBuffers(commandBuffers[currentFrame], 0, 1, overlayBuffers, overlayOffsets);
+    // 
+    // // Draw the overlay square (2 triangles = 6 vertices)
+    // vkCmdDraw(commandBuffers[currentFrame], 6, 1, 0, 0);
     
     vkCmdEndRenderPass(commandBuffers[currentFrame]);
     
