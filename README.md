@@ -16,13 +16,17 @@ This project is an efficient block-based voxel game that utilizes cubic chunks a
 - ✅ **Mesh rendering integrated with Vulkan pipeline**
 - ✅ **Camera system with MVP matrices**
 - ✅ **Keyboard input for camera movement and rotation**
+- ✅ **Dynamic chunk generation, loading, and meshing around camera**
 - macOS (MoltenVK) portability enumeration and subset extension handling are in place.
 
 ## Features
 - Block-based voxel world
-- Cubic chunk management
-- Dynamic loading and unloading of chunks
+- Cubic chunk management (16x16x16 voxels per chunk)
+- **Dynamic chunk loading and unloading based on camera position**
+- **Spherical render distance with configurable range**
+- **Automatic mesh generation and GPU buffer management**
 - Vulkan graphics rendering
+- Greedy meshing algorithm for optimized polygon count
 
 ## Prerequisites
 Before you begin, ensure you have the following installed:
@@ -71,11 +75,14 @@ After building the project, you can run the application:
 
 The application will:
 1. Initialize Vulkan and create a rendering context
-2. Generate a test voxel chunk (16x16x16 voxels)
-3. Create mesh geometry using face culling optimization
-4. Upload vertex and index buffers to GPU
-5. Render the mesh with simple directional lighting
+2. Dynamically generate and load voxel chunks around the camera
+3. Create mesh geometry using greedy meshing and face culling optimization
+4. Upload vertex and index buffers to GPU for each chunk
+5. Render all loaded chunks with simple directional lighting
 6. Allow camera movement with WASD keys and rotation with arrow keys
+7. Automatically load new chunks and unload distant chunks as you move
+
+For dynamic chunk loading details, see [DYNAMIC_CHUNK_LOADING.md](DYNAMIC_CHUNK_LOADING.md).
 
 For camera controls, see [CAMERA_CONTROLS.md](CAMERA_CONTROLS.md).
 For debug mode and frame-by-frame analysis, see [DEBUG_MODE.md](DEBUG_MODE.md).
@@ -117,8 +124,10 @@ To add new textures or shaders, place them in the `assets/textures` or `assets/s
 - ✅ **Integrate mesh rendering with graphics pipeline**
 - ✅ **Camera system and MVP matrices**
 - ✅ **Keyboard input for camera control**
-- 🔄 Chunk manager integration with rendering
+- ✅ **Dynamic chunk loading and meshing around camera**
 - 🔄 Texture atlas support
+- 🔄 Frustum culling optimization
+- 🔄 Chunk persistence (save/load to disk)
 
 ### 8. Contribute
 If you would like to contribute to the project, please fork the repository and submit a pull request with your changes.
