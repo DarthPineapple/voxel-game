@@ -28,22 +28,31 @@ void Camera::update(float deltaTime) {
     if (pitch > maxPitch) pitch = maxPitch;
     if (pitch < -maxPitch) pitch = -maxPitch;
     
-    // Calculate forward and right vectors based on yaw
+    // Calculate direction vectors based on current pitch and yaw
+    float cosPitch = std::cos(pitch);
+    float sinPitch = std::sin(pitch);
     float cosYaw = std::cos(yaw);
     float sinYaw = std::sin(yaw);
     
-    // Forward direction (in XZ plane)
-    float forwardX = -sinYaw;
-    float forwardZ = -cosYaw;
+    // Forward direction (full 3D vector based on pitch and yaw)
+    float forwardX = -sinYaw * cosPitch;
+    float forwardY = sinPitch;
+    float forwardZ = -cosYaw * cosPitch;
     
-    // Right direction (perpendicular to forward in XZ plane)
+    // Right direction (perpendicular to forward, always horizontal)
     float rightX = cosYaw;
+    float rightY = 0.0f;
     float rightZ = -sinYaw;
     
-    // Update position
-    posX += (forwardX * inputForward + rightX * inputRight) * moveSpeed * deltaTime;
-    posZ += (forwardZ * inputForward + rightZ * inputRight) * moveSpeed * deltaTime;
-    posY += inputUp * moveSpeed * deltaTime;
+    // Up direction (perpendicular to both forward and right)
+    float upX = sinYaw * sinPitch;
+    float upY = cosPitch;
+    float upZ = cosYaw * sinPitch;
+    
+    // Update position based on current view direction
+    posX += (forwardX * inputForward + rightX * inputRight + upX * inputUp) * moveSpeed * deltaTime;
+    posY += (forwardY * inputForward + rightY * inputRight + upY * inputUp) * moveSpeed * deltaTime;
+    posZ += (forwardZ * inputForward + rightZ * inputRight + upZ * inputUp) * moveSpeed * deltaTime;
 }
 
 void Camera::setMovementInput(float forward, float right, float up) {
