@@ -46,11 +46,12 @@ void Chunk::generateVoxels() {
     for (int x = 0; x < CHUNK_SIZE; ++x) {
         for (int z = 0; z < CHUNK_SIZE; ++z) {
             // Calculate world coordinates
-            float worldX = (posX * CHUNK_SIZE + x) * TerrainConfig::SCALE;
-            float worldZ = (posZ * CHUNK_SIZE + z) * TerrainConfig::SCALE;
+            float worldX = posX * CHUNK_SIZE + x;
+            float worldZ = posZ * CHUNK_SIZE + z;
             
-            // Generate height using octave noise
-            float noiseValue = noise.octaveNoise(worldX, worldZ, 
+            // Generate height using octave noise (apply scale during sampling)
+            float noiseValue = noise.octaveNoise(worldX * TerrainConfig::SCALE, 
+                                                  worldZ * TerrainConfig::SCALE,
                                                   TerrainConfig::OCTAVES, 
                                                   TerrainConfig::PERSISTENCE);
             
