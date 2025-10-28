@@ -27,9 +27,21 @@ public:
 
 private:
     static bool isVoxelSolid(const Chunk& chunk, int x, int y, int z);
-    static void addFace(std::vector<Vertex>& vertices, 
+    static uint8_t getVoxelType(const Chunk& chunk, int x, int y, int z);
+    
+    // Greedy meshing implementation for each axis
+    static void greedyMeshAxis(const Chunk& chunk,
+                               std::vector<Vertex>& vertices,
+                               std::vector<uint32_t>& indices,
+                               int axis,
+                               int chunkOffsetX, int chunkOffsetY, int chunkOffsetZ);
+    
+    // Add a merged quad to the mesh
+    static void addQuad(std::vector<Vertex>& vertices,
                        std::vector<uint32_t>& indices,
-                       int x, int y, int z, int face,
+                       int x, int y, int z,
+                       int width, int height,
+                       int axis, bool backFace,
                        int chunkOffsetX, int chunkOffsetY, int chunkOffsetZ);
 };
 
