@@ -29,6 +29,14 @@ private:
     static bool isVoxelSolid(const Chunk& chunk, int x, int y, int z);
     static uint8_t getVoxelType(const Chunk& chunk, int x, int y, int z);
     
+    // Optimized version that takes voxels reference directly (avoids repeated getVoxels() calls)
+    static inline uint8_t getVoxelTypeDirect(const std::vector<Voxel>& voxels, int x, int y, int z) {
+        if (x < 0 || x >= CHUNK_SIZE || y < 0 || y >= CHUNK_SIZE || z < 0 || z >= CHUNK_SIZE) {
+            return 0;
+        }
+        return voxels[x + y * CHUNK_SIZE + z * CHUNK_SIZE * CHUNK_SIZE].getType();
+    }
+    
     // Greedy meshing implementation for each axis
     static void greedyMeshAxis(const Chunk& chunk,
                                std::vector<Vertex>& vertices,

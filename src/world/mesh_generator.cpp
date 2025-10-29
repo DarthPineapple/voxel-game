@@ -65,7 +65,7 @@ void MeshGenerator::greedyMeshAxis(const Chunk& chunk,
     // For greedy meshing, we sweep through slices perpendicular to the axis
     // and merge adjacent faces with the same voxel type
     
-    // Cache voxels array for faster access
+    // Cache voxels array for faster access (avoids repeated function calls)
     const auto& voxels = chunk.getVoxels();
     
     // axis 0 = X, axis 1 = Y, axis 2 = Z
@@ -86,14 +86,6 @@ void MeshGenerator::greedyMeshAxis(const Chunk& chunk,
     // we use voxel type as the mask value (0 = no face, >0 = face with that type)
     uint8_t mask[CHUNK_SIZE * CHUNK_SIZE];
     
-    // Inline lambda for getting voxel type with bounds checking
-    auto getType = [&voxels](int x, int y, int z) -> uint8_t {
-        if (x < 0 || x >= CHUNK_SIZE || y < 0 || y >= CHUNK_SIZE || z < 0 || z >= CHUNK_SIZE) {
-            return 0;
-        }
-        return voxels[x + y * CHUNK_SIZE + z * CHUNK_SIZE * CHUNK_SIZE].getType();
-    };
-    
     // We iterate over each slice perpendicular to the axis
     for (x[axis] = -1; x[axis] < CHUNK_SIZE;) {
         // Clear the mask
@@ -105,11 +97,11 @@ void MeshGenerator::greedyMeshAxis(const Chunk& chunk,
                 // Get voxel types on both sides of the slice
                 // voxelType1 is the voxel at current position
                 // voxelType2 is the voxel in the +axis direction
-                uint8_t voxelType1 = (x[axis] >= 0) ? getType(x[0], x[1], x[2]) : 0;
+                uint8_t voxelType1 = (x[axis] >= 0) ? getVoxelTypeDirect(voxels, x[0], x[1], x[2]) : 0;
                 
                 int x2[3] = {x[0], x[1], x[2]};
                 x2[axis]++;
-                uint8_t voxelType2 = (x2[axis] < CHUNK_SIZE) ? getType(x2[0], x2[1], x2[2]) : 0;
+                uint8_t voxelType2 = (x2[axis] < CHUNK_SIZE) ? getVoxelTypeDirect(voxels, x2[0], x2[1], x2[2]) : 0;
                 
                 // If the voxels are different, we have an exposed face
                 // We store the type of the solid voxel in the mask
