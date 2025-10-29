@@ -85,18 +85,22 @@ void ChunkManager::updateChunksAroundCamera(float camX, float camY, float camZ, 
     int camChunkY = static_cast<int>(std::floor(camY / CHUNK_SIZE));
     int camChunkZ = static_cast<int>(std::floor(camZ / CHUNK_SIZE));
     
+    // Use squared distance to avoid expensive sqrt calls
+    int renderDistSq = renderDistance * renderDistance;
+    int unloadDistSq = (renderDistance + 1) * (renderDistance + 1);
+    
     // Load chunks within render distance
     for (int x = camChunkX - renderDistance; x <= camChunkX + renderDistance; ++x) {
         for (int y = camChunkY - renderDistance; y <= camChunkY + renderDistance; ++y) {
             for (int z = camChunkZ - renderDistance; z <= camChunkZ + renderDistance; ++z) {
-                // Calculate distance to chunk
+                // Calculate squared distance to chunk
                 int dx = x - camChunkX;
                 int dy = y - camChunkY;
                 int dz = z - camChunkZ;
-                float distance = std::sqrt(static_cast<float>(dx*dx + dy*dy + dz*dz));
+                int distanceSq = dx*dx + dy*dy + dz*dz;
                 
                 // Only load chunks within the spherical render distance
-                if (distance <= renderDistance) {
+                if (distanceSq <= renderDistSq) {
                     addChunk(x, y, z);
                 }
             }
@@ -105,14 +109,16 @@ void ChunkManager::updateChunksAroundCamera(float camX, float camY, float camZ, 
     
     // Unload chunks outside render distance
     std::vector<std::tuple<int, int, int>> chunksToUnload;
+    chunksToUnload.reserve(chunks.size() / 4);  // Reserve space to reduce reallocations
+    
     for (const auto& chunk : chunks) {
         int dx = chunk->getPosX() - camChunkX;
         int dy = chunk->getPosY() - camChunkY;
         int dz = chunk->getPosZ() - camChunkZ;
-        float distance = std::sqrt(static_cast<float>(dx*dx + dy*dy + dz*dz));
+        int distanceSq = dx*dx + dy*dy + dz*dz;
         
         // Unload chunks beyond render distance (with small buffer to prevent thrashing)
-        if (distance > renderDistance + 1) {
+        if (distanceSq > unloadDistSq) {
             chunksToUnload.push_back(std::make_tuple(chunk->getPosX(), chunk->getPosY(), chunk->getPosZ()));
         }
     }
